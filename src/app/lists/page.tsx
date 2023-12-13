@@ -2,7 +2,7 @@
 
 import { SharedListResponse } from '@/services/sharedListRepository'
 import { useEffect, useState } from 'react'
-import styles from './styles.module.css'
+import styles from './styles.module.scss'
 import Spinner from '@/components/spinner';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import '@/app/globalicons.css'
@@ -16,6 +16,7 @@ export default function Lists() {
     const [createListDialogOpen, setCreateListDialogOpen] = useState<boolean>(false);
     const [newList, setNewList] = useState<{name: string, viewers: string[]}>({name: '', viewers: []});
     const [newListViewerInput, setNewListViewerInput] = useState<string>('');
+    const [creatingList, setCreatingList] = useState<boolean>(false);
     useEffect(() => {
         if(!session.data) {
             setOwnedLists([]);
@@ -44,6 +45,7 @@ export default function Lists() {
             alert("Must be valid name");
             return;
         }
+        setCreatingList(true);
         fetch("/api/list", {
             method: "POST",
             body: JSON.stringify({name: newList.name, viewers: newList.viewers})
@@ -51,6 +53,8 @@ export default function Lists() {
         .then((res) => res.json())
         .then((data) => {
             setOwnedLists([...(ownedLists || []), data])
+            setCreatingList(false);
+            setCreateListDialogOpen(false);
     })};
 
     let getOwnedLists = () => {
@@ -90,35 +94,35 @@ export default function Lists() {
             {
                 createListDialogOpen ? 
                 <Dialog title='Create New List' close={() => {setCreateListDialogOpen(false)}}>
-                    <div style={{display: 'flex', flexDirection: 'column', gap: '18px', padding: '12px'}}>
-                        <div style={{display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px'}}>
-                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px'}}>
+                    <div className={styles['dialog-container']}>
+                        <div className={styles['input-container']}>
+                            <div  className={styles['input-row']}>
                                 name: <input placeholder='name' onChange={(e) => setNewList({...newList, name: e.target.value})}></input>
                             </div>
-                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px'}}>
+                            <div className={styles['input-row']}>
                                 viewers:
                                 <div className={styles['add-viewers-container']}>
                                     <input placeholder='email' value={newListViewerInput} onChange={(e) => {setNewListViewerInput(e.target.value)}} onKeyDown={(e) => {if(e.code === 'Enter') addViewer()}}></input>
-                                    <button className="material-symbols-outlined" onClick={() => {addViewer()}}>add</button>
+                                    <button className="material-symbols-outlined" disabled={!isValidEmail(newListViewerInput)} onClick={() => {addViewer()}}>add</button>
                                 </div>
                             </div>
-                            {newList.viewers.map((v, i) => 
-                                <div key={i} style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                            {
+                            newList.viewers.map((v, i) => 
+                                <div key={i} className={styles['viewer-row']}>
                                     {v}
-                                    <button className="material-symbols-outlined" style={{fontSize: 'medium', width: '24px', height: '24px', borderRadius: '50%'}}
+                                    <button className="material-symbols-outlined" 
                                     onClick={() => {setNewList({...newList, viewers: newList.viewers.toSpliced(i, 1)})}}>close</button>
                                 </div>
                             )}
-                            
                         </div>
+
+                        {
+                        creatingList ? <div className={styles['spinner-container']}>Creating "{newList.name}"<Spinner></Spinner></div> :
                         <div className={styles['button-container']}>
-                        
-                        <div style={{display: 'flex', justifyContent: 'center', gap: '12px', padding: '12px'}}>
                             <button onClick={() => {setCreateListDialogOpen(false)}}>Cancel</button>
                             <button className='primary' onClick={() => {createList()}}>Create</button>
                         </div>
-                            
-                        </div>
+                        }
                     </div>
                 </Dialog>
                 : null

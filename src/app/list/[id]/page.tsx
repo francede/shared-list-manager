@@ -2,12 +2,13 @@
 
 import { SharedListResponse } from '@/services/sharedListRepository'
 import { ReactNode, createRef, useEffect, useRef, useState } from 'react'
-import styles from './styles.module.css'
+import styles from './styles.module.scss'
 import '@/app/globalicons.css'
 import React from 'react';
 import Spinner from '@/components/spinner'
 import Dialog from '@/components/dialog'
 import { useRouter } from 'next/navigation'
+import utils from '@/services/utils'
 
 export default function Lists(props: Props){
     const router = useRouter();
@@ -18,7 +19,11 @@ export default function Lists(props: Props){
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
     const [editListDialogOpen, setEditListDialogOpen] = useState<boolean>(false);
     const [aboutToDelete, setAboutToDelete] = useState<boolean>(false);
-    const [deleting, setDeleting] = useState<boolean>(false);
+    const [deletingList, setDeletingList] = useState<boolean>(false);
+    const [savingList, setSavingList] = useState<boolean>(false);
+    const [newName, setNewName] = useState<string>('');
+    const [newViewers, setNewViewers] = useState<string[]>([]);
+    const [newViewerInput, setNewViewerInput] = useState<string>('');
 
     useEffect(() => {
         fetch("/api/list/" + props.params.id)
@@ -30,7 +35,7 @@ export default function Lists(props: Props){
 
     let saveList = () => {
         setSaved(false);
-        console.log("saving ", list)
+        setSavingList(true);
         fetch("/api/list/" + props.params.id, {
             method: "PUT",
             body: JSON.stringify(list)
@@ -38,8 +43,15 @@ export default function Lists(props: Props){
         .then((res) => res.json())
         .then((data) => {
             //TODO: change to check response
-            setSaved(true)
+            setSaved(true);
+            setSavingList(false);
+            setEditListDialogOpen(false);
         });
+    }
+
+    let saveMetaData = () => {
+        setList({...list!, name: newName || list!.name, viewers: newViewers});
+        saveList();
     }
 
     let deleteList = () => {
@@ -47,7 +59,7 @@ export default function Lists(props: Props){
             setAboutToDelete(true);
             return;
         }
-        setDeleting(true);
+        setDeletingList(true);
 
         fetch("/api/list/" + props.params.id, {
             method: "DELETE",
@@ -60,10 +72,12 @@ export default function Lists(props: Props){
 
     let openEditListDialog = () => {
         setEditListDialogOpen(true);
+        setNewName('');
+        setNewViewers(list?.viewers || []);
     }
 
     let closeEditListDialog = () => {
-        if(deleting) return;
+        if(deletingList) return;
         setEditListDialogOpen(false);
     }
 
@@ -121,27 +135,59 @@ export default function Lists(props: Props){
         }
         return <span>saving...</span>;
     }
+
+    let addNewViewer = () => {
+        if(!utils.isValidEmail(newViewerInput)) return;
+        setNewViewers([...newViewers, newViewerInput]);
+        setNewViewerInput('');
+    }
+
+    let getSpinner = () => {
+        if(deletingList){
+            return <div className={styles['spinner-container']}>Deleting "{list?.name}"<Spinner></Spinner></div>
+        }
+        if(savingList){
+            return <div className={styles['spinner-container']}>Saving "{list?.name}"<Spinner></Spinner></div>
+        }
+    }
     
     return (
         <div className={styles['list-page']}>
             {editListDialogOpen ? 
             <Dialog title='Edit List' close={() => {closeEditListDialog()}}>
-                <div style={{display: 'flex', flexDirection: 'column', gap: '18px', padding: '12px'}}>
-                    <div>
-                        name: <input placeholder={list?.name}></input>
-                    </div>
-                    {
-                        deleting ? <div className={styles['deleting-spinner-container']}>Deleting<Spinner></Spinner></div> :
+                <div className={styles['dialog-container']}>
+                        <div className={styles['input-container']}>
+                            <div  className={styles['input-row']}>
+                                name: <input placeholder={list?.name} onChange={(e) => setNewName(e.target.value)}></input>
+                            </div>
+                            <div className={styles['input-row']}>
+                                viewers:
+                                <div className={styles['add-viewers-container']}>
+                                    <input placeholder='email' value={newViewerInput} onChange={(e) => {setNewViewerInput(e.target.value)}} onKeyDown={(e) => {if(e.code === 'Enter') addNewViewer()}}></input>
+                                    <button className="material-symbols-outlined" disabled={!utils.isValidEmail(newViewerInput)} onClick={() => {addNewViewer()}}>add</button>
+                                </div>
+                            </div>
+                            {
+                            newViewers.map((v, i) => 
+                                <div key={i} className={styles['viewer-row']}>
+                                    {v}
+                                    <button className="material-symbols-outlined" 
+                                    onClick={() => {setNewViewers(newViewers.toSpliced(i, 1))}}>close</button>
+                                </div>
+                            )}
+                        </div>
+
+                        {
+                        getSpinner() ||
                         <div className={styles['button-container']}>
-                        
                             <div style={{position: 'relative'}}>
                                 {aboutToDelete ? <div className={styles['delete-warning']}>Click again to confirm</div> : null}
                                 <button className='warning' onClick={() => {deleteList()}} onBlur={() => setAboutToDelete(false)}>Delete List</button>
                             </div>
-                            <button onClick={() => {alert(list?._id)}}>Save</button>
+                            <button className='primary' onClick={() => saveMetaData()}>Save Changes</button>
                         </div>
-                    }
-                </div>
+                        }
+                    </div>
             </Dialog> : ''}
             
             <div  className={styles['top-bar']}>
