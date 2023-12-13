@@ -1,0 +1,194 @@
+.list-page{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.top-bar{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.top-bar > div{
+    position: absolute;
+    top: calc(10px + 100%);
+    right: 0%;
+    width: 150px;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #aaa;
+    transition: opacity 0.5s;    
+}
+
+.top-bar > div > button{
+    border-radius: 0px;
+    position: relative;
+    text-align: left;
+    padding: 8px 16px;
+}
+
+.top-bar > div > button > span{
+    font-size: medium;
+    vertical-align: text-bottom;
+    margin-right: 4px;
+}
+
+.top-bar > div > button:not(:last-of-type)::after{
+    content : "";
+    position: absolute;
+    left: 12.5%;
+    bottom: 0;
+    height: 1px;
+    width: 75%;
+    border-bottom: 1px solid #aaa;
+}
+
+.open{
+    opacity: 100%;
+    visibility: visible;
+}
+
+.menu-button{
+    justify-content: start;
+}
+
+.closed{
+    opacity: 0%;
+    visibility: hidden;
+}
+
+
+.list-title{
+    font-size: 1.2em;
+    font-weight: bold;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 12px 24px;
+}
+
+.list-title div{
+    display: flex;
+    flex-direction: row;
+}
+
+.list-title span{
+    font-size: small;
+    font-weight: normal;
+    color: grey;
+    align-self: center;
+}
+
+.list-container{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}  
+
+.list-item{
+    background-color: #eee;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #aaa;
+    transition: background-color 0.5s;
+}
+
+.list-item:hover{
+    background-color: #ddd;
+    cursor: pointer;
+}
+
+.checked{
+    background-color: #ddd;
+}
+
+.checked>span{
+    position: relative;
+}
+
+.checked>span::after{
+    background-color: black;
+    position: absolute;
+    content: '';
+    top: 50%;
+    left: 0;
+    width: 0%;
+    height: 2px;
+    animation-name: strikethrough;
+    animation-duration: 0.5s;
+    animation-fill-mode: forwards;
+}
+
+.checked.to-delete>span::after{
+    background-color: red;
+}
+
+.to-delete{
+    color: red;
+}
+
+.input-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.input-container>button{
+    font-size: larger;
+}
+
+.button-container{
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    position: relative;
+}
+
+.deleting-spinner-container{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.delete-warning{
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, -100%);
+    color: red;
+    white-space: nowrap;
+    animation-name: delete-warning;
+    animation-duration: 0.25s;
+    animation-fill-mode: forwards;
+}
+
+@keyframes strikethrough {
+    0%{
+        width: 0%;
+    }
+    100%{
+        width: 100%;
+    }
+}
+
+@keyframes delete-warning {
+    from{
+        top: 10px;
+        opacity: 0%;
+        font-size: xx-small;
+    }
+    to{
+        top: 0px;
+        opacity: 100%;
+        font-size: x-small;
+    }
+}

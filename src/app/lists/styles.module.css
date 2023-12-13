@@ -1,0 +1,37 @@
+.auth-container{
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.list-container{
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    align-items: center;
+}
+
+.list-container > a{
+    width: 100%;
+    box-sizing: border-box;
+    justify-content: start;
+}
+
+.add-viewers-container{
+    position: relative;
+}
+
+.add-viewers-container > button{
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    padding: 0px;
+    font-size: medium;
+}
