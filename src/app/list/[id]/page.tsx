@@ -25,7 +25,7 @@ export default function Lists(props: Props){
         .then((res) => res.json()).catch((e) => {console.log("error", e)})
         .then((data: SharedListResponse) => {
             setList(data)
-        }).catch((e) => {console.log("error", e)})}, []
+        }).catch((e) => {console.log("error", e)})}, [props.params.id]
     )
 
     let saveList = () => {

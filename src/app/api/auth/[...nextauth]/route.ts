@@ -1,9 +1,9 @@
 import NextAuth, { AuthOptions } from 'next-auth'
-import Google from "next-auth/providers/google";
+import GoogleProvider from "next-auth/providers/google";
 
-export const OPTIONS: AuthOptions = {
+export const OPTIONS: any = {
   providers: [
-    Google({
+    GoogleProvider({
       clientId: process.env.GOOGLE_ID!,
       clientSecret: process.env.GOOGLE_SECRET!
     }),

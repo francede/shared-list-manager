@@ -32,7 +32,7 @@ export default function Lists() {
         .then((data) => {
             setViewableLists(data)
         })
-    }, [])
+    }, [session.data])
 
     let openCreateListDialog = () => {
         setNewList({name: '', viewers: []});
