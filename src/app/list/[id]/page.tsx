@@ -144,10 +144,10 @@ export default function Lists(props: Props){
 
     let getSpinner = () => {
         if(deletingList){
-            return <div className={styles['spinner-container']}>Deleting "{list?.name}"<Spinner></Spinner></div>
+            return <div className={styles['spinner-container']}>Deleting &quot;{list?.name}&quot;<Spinner></Spinner></div>
         }
         if(savingList){
-            return <div className={styles['spinner-container']}>Saving "{list?.name}"<Spinner></Spinner></div>
+            return <div className={styles['spinner-container']}>Saving &quot;{list?.name}&quot;<Spinner></Spinner></div>
         }
     }
     

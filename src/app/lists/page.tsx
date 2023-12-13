@@ -117,7 +117,7 @@ export default function Lists() {
                         </div>
 
                         {
-                        creatingList ? <div className={styles['spinner-container']}>Creating "{newList.name}"<Spinner></Spinner></div> :
+                        creatingList ? <div className={styles['spinner-container']}>Creating &quot;{newList.name}&quot;<Spinner></Spinner></div> :
                         <div className={styles['button-container']}>
                             <button onClick={() => {setCreateListDialogOpen(false)}}>Cancel</button>
                             <button className='primary' onClick={() => {createList()}}>Create</button>
