@@ -219,7 +219,7 @@ export default function Lists(props: Props){
                         )}
                     </div>
                     <div  className={styles['input-container']}>
-                        <input enterKeyHint='enter' type='text' value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => {if(e.code === 'Enter') createElement()}}></input>
+                        <input enterKeyHint='enter' type='text' value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => {if(e.key === 'Enter') createElement()}}></input>
                         <button disabled={input.length === 0} onClick={() => createElement()}>+</button>
                     </div>
                 </>
