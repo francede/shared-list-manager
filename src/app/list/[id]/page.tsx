@@ -9,9 +9,11 @@ import Spinner from '@/components/spinner'
 import Dialog from '@/components/dialog'
 import { useRouter } from 'next/navigation'
 import utils from '@/services/utils'
+import { useSession } from 'next-auth/react'
 
 export default function Lists(props: Props){
     const router = useRouter();
+    const session = useSession();
     const [list, setList] = useState<SharedListResponse | null>(null);
     const [indexToDelete, setIndexToDelete] = useState<number | null>(null);
     const [saved, setSaved] = useState<boolean>(true);
@@ -27,12 +29,20 @@ export default function Lists(props: Props){
     const [undoEvent, setUndoEvent] = useState<{oldListState: SharedListResponse, undoTarget: string} | null>(null);
 
     useEffect(() => {
+
+    })
+
+    useEffect(() => {
         fetch("/api/list/" + props.params.id)
         .then((res) => res.json()).catch((e) => {console.log("error", e)})
         .then((data: SharedListResponse) => {
             setList(data)
         }).catch((e) => {console.log("error", e)})}, [props.params.id]
     )
+
+    useEffect(() => {
+        saveList();
+    }, [JSON.stringify(list)]);
 
     let saveList = () => {
         setSaved(false);
@@ -52,7 +62,6 @@ export default function Lists(props: Props){
 
     let saveMetaData = () => {
         setList({...list!, name: newName || list!.name, viewers: newViewers});
-        saveList();
     }
 
     let deleteList = () => {
@@ -71,17 +80,6 @@ export default function Lists(props: Props){
         });
     }
 
-    let openEditListDialog = () => {
-        setEditListDialogOpen(true);
-        setNewName('');
-        setNewViewers(list?.viewers || []);
-    }
-
-    let closeEditListDialog = () => {
-        if(deletingList) return;
-        setEditListDialogOpen(false);
-    }
-
     let clearChecked = () => {
         let elements = [...list!.elements];
         elements = elements.filter((e) => !e.checked);
@@ -93,7 +91,6 @@ export default function Lists(props: Props){
         list!.elements = elements;
 
         setList(newList);
-        saveList();
     }
 
     let clickElement = (i: number) => {
@@ -114,7 +111,6 @@ export default function Lists(props: Props){
         let newList = list;
         list!.elements = elements;
         setList(newList);
-        saveList();
     };
 
     let createElement = () => {
@@ -124,7 +120,6 @@ export default function Lists(props: Props){
         newList!.elements = elements;
         setList(newList);
         setInput('');
-        saveList();
     }
     
     let getElementClassName = (e: {name: string, checked: boolean}, i: number) => {
@@ -156,6 +151,17 @@ export default function Lists(props: Props){
         }
     }
 
+    let openEditListDialog = () => {
+        setEditListDialogOpen(true);
+        setNewName('');
+        setNewViewers(list?.viewers || []);
+    }
+
+    let closeEditListDialog = () => {
+        if(deletingList) return;
+        setEditListDialogOpen(false);
+    }
+
     let setUndoEventState = (target: string) => {
         setUndoEvent({oldListState: structuredClone(list!), undoTarget: target});
     }
@@ -163,7 +169,6 @@ export default function Lists(props: Props){
     let undo = () => {
         if(!undoEvent) return;
         setList(undoEvent?.oldListState);
-        saveList();
         setUndoEvent(null);
     }
     
@@ -215,7 +220,9 @@ export default function Lists(props: Props){
 
                 <div className={settingsOpen ? styles['open'] : styles['closed']}>
                     <button className={styles['menu-button']} onClick={() => clearChecked()}><span className="material-symbols-outlined">delete_forever</span>Clear checked</button>
+                    {list?.owner === session.data?.user?.email ?
                     <button className={styles['menu-button']} onClick={() => openEditListDialog()}><span className="material-symbols-outlined">edit</span>Edit</button>
+                    : null}
                     <button className={styles['menu-button']} disabled={!undoEvent} onClick={() => undo()}><span className="material-symbols-outlined">undo</span>Undo {undoEvent?.undoTarget}</button>
                     
                 </div>
