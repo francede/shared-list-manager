@@ -7,6 +7,7 @@ import Spinner from '@/components/spinner';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import '@/app/globalicons.css'
 import Dialog from '@/components/dialog';
+import utils from '@/services/utils';
 
 
 export default function Lists() {
@@ -17,6 +18,7 @@ export default function Lists() {
     const [newList, setNewList] = useState<{name: string, viewers: string[]}>({name: '', viewers: []});
     const [newListViewerInput, setNewListViewerInput] = useState<string>('');
     const [creatingList, setCreatingList] = useState<boolean>(false);
+
     useEffect(() => {
         if(!session.data) {
             setOwnedLists([]);
@@ -78,15 +80,9 @@ export default function Lists() {
     }
 
     let addViewer = () => {
-        if(!isValidEmail(newListViewerInput)) return;
+        if(!utils.isValidEmail(newListViewerInput)) return;
         setNewList({...newList, viewers: [...newList.viewers, newListViewerInput]});
         setNewListViewerInput('');
-    }
-
-    let isValidEmail = (email: string) => {
-        return String(email).toLowerCase().match(
-            /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-        );
     }
 
     return (
@@ -103,7 +99,7 @@ export default function Lists() {
                                 viewers:
                                 <div className={styles['add-viewers-container']}>
                                     <input placeholder='email' value={newListViewerInput} onChange={(e) => {setNewListViewerInput(e.target.value)}} onKeyDown={(e) => {if(e.code === 'Enter') addViewer()}}></input>
-                                    <button className="material-symbols-outlined" disabled={!isValidEmail(newListViewerInput)} onClick={() => {addViewer()}}>add</button>
+                                    <button className="material-symbols-outlined" disabled={!utils.isValidEmail(newListViewerInput)} onClick={() => {addViewer()}}>add</button>
                                 </div>
                             </div>
                             {
