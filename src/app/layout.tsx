@@ -23,7 +23,9 @@ export default async function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <SharedListSessionProvider session={session}>
+          <div>
           {children}
+          </div>
         </SharedListSessionProvider>
       </body>
     </html>
