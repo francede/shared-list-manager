@@ -140,14 +140,16 @@ export default function Lists() {
             </div>
             
             
+            <div className={styles['content-container']}>
+                <h3>My Lists</h3>
+                <div className={styles['list-container']}>{getOwnedLists()}</div>
+                
+                <h3>Viewable Lists</h3>
+                <div className={styles['list-container']}>{getViewableLists()}</div>
 
-            <h3>My Lists</h3>
-            <div className={styles['list-container']}>{getOwnedLists()}</div>
+                <button onClick={() => openCreateListDialog()} style={{marginTop: "24px"}}>Create List</button>
+            </div>
             
-            <h3>Viewable Lists</h3>
-            <div className={styles['list-container']}>{getViewableLists()}</div>
-
-            <button onClick={() => openCreateListDialog()} style={{marginTop: "24px"}}>Create List</button>
         </>
     )
 }
