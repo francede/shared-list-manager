@@ -24,6 +24,7 @@ export default function Lists(props: Props){
     const [newName, setNewName] = useState<string>('');
     const [newViewers, setNewViewers] = useState<string[]>([]);
     const [newViewerInput, setNewViewerInput] = useState<string>('');
+    const [undoEvent, setUndoEvent] = useState<{oldListState: SharedListResponse, undoTarget: string} | null>(null);
 
     useEffect(() => {
         fetch("/api/list/" + props.params.id)
@@ -86,6 +87,8 @@ export default function Lists(props: Props){
         elements = elements.filter((e) => !e.checked);
         if(elements.length === list?.elements.length) return;
 
+        setUndoEventState("clear checked")
+
         let newList = list;
         list!.elements = elements;
 
@@ -97,6 +100,7 @@ export default function Lists(props: Props){
         let elements = [...list!.elements];
         if(elements[i].checked){
             if(i === indexToDelete){
+                setUndoEventState("delete");
                 elements.splice(i, 1);
                 setIndexToDelete(null);
             }else{
@@ -104,6 +108,7 @@ export default function Lists(props: Props){
                 return
             }
         }else{
+            setUndoEventState("check");
             elements[i].checked = true;
         }
         let newList = list;
@@ -149,6 +154,17 @@ export default function Lists(props: Props){
         if(savingList){
             return <div className={styles['spinner-container']}>Saving &quot;{list?.name}&quot;<Spinner></Spinner></div>
         }
+    }
+
+    let setUndoEventState = (target: string) => {
+        setUndoEvent({oldListState: structuredClone(list!), undoTarget: target});
+    }
+
+    let undo = () => {
+        if(!undoEvent) return;
+        setList(undoEvent?.oldListState);
+        saveList();
+        setUndoEvent(null);
     }
     
     return (
@@ -198,9 +214,9 @@ export default function Lists(props: Props){
                     onBlur={() => setSettingsOpen(false)}>settings</button>
 
                 <div className={settingsOpen ? styles['open'] : styles['closed']}>
-                    <button className={styles['menu-button']} onClick={() => clearChecked()}><span className="material-symbols-outlined">delete_forever</span>Clear Checked</button>
+                    <button className={styles['menu-button']} onClick={() => clearChecked()}><span className="material-symbols-outlined">delete_forever</span>Clear checked</button>
                     <button className={styles['menu-button']} onClick={() => openEditListDialog()}><span className="material-symbols-outlined">edit</span>Edit</button>
-                    <button className={styles['menu-button']} disabled><span className="material-symbols-outlined">undo</span>Undo</button>
+                    <button className={styles['menu-button']} disabled={!undoEvent} onClick={() => undo()}><span className="material-symbols-outlined">undo</span>Undo {undoEvent?.undoTarget}</button>
                     
                 </div>
             </div>
