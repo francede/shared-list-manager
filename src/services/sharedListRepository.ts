@@ -19,13 +19,6 @@ export class SharedListRepository{
             .catch((e) => console.log("error while connecting", e));
     }
 
-    static async register(){
-    }
-
-    static async login(){
-
-    }
-
     static async getSharedList(id: string): Promise<SharedListResponse | null>{
         await this.connect();
         return await this.sharedListModel.findById(id).exec();

@@ -14,7 +14,7 @@ import { useSession } from 'next-auth/react'
 export default function Lists(props: Props){
     const router = useRouter();
     const session = useSession();
-    const [list, setList] = useState<SharedListResponse | null>(null);
+    const [list, setList] = useState<(SharedListResponse) | null>(null);
     const [indexToDelete, setIndexToDelete] = useState<number | null>(null);
     const [saved, setSaved] = useState<boolean>(true);
     const [input, setInput] = useState<string>('');
@@ -29,14 +29,10 @@ export default function Lists(props: Props){
     const [undoEvent, setUndoEvent] = useState<{oldListState: SharedListResponse, undoTarget: string} | null>(null);
 
     useEffect(() => {
-
-    })
-
-    useEffect(() => {
         fetch("/api/list/" + props.params.id)
         .then((res) => res.json()).catch((e) => {console.log("error", e)})
         .then((data: SharedListResponse) => {
-            setList(data)
+            setList(data);
         }).catch((e) => {console.log("error", e)})}, [props.params.id]
     )
 
@@ -231,7 +227,7 @@ export default function Lists(props: Props){
                 list === null ? <div style={{width: 'fit-content', alignSelf: 'center', padding: '20px'}}><Spinner></Spinner></div> : 
                 <>
                     <div className={styles['list-title']}>
-                        {list?.name}
+                        {list?.name} <span style={{fontSize:'small'}}>(owned by: {list.owner})</span>
                         <div>{getSavedText()}</div>
                     </div>
                     <div className={styles['list-container']}>

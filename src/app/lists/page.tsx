@@ -128,7 +128,7 @@ export default function Lists() {
                 {
                 session.data ? 
                 <>
-                    Logged in as {session.data.user?.name}
+                    Logged in as {session.data.user?.email}
                     <button onClick={() => signOut()}><span className="material-symbols-outlined">logout</span>Logout</button>
                 </> :
                 <button onClick={() => signIn()}><span className="material-symbols-outlined">login</span> Login</button>
