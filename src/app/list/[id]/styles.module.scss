@@ -106,6 +106,7 @@
     border-radius: 8px;
     border: 1px solid #aaa;
     transition: background-color 0.5s;
+    
 }
 
 .list-item:hover{
@@ -115,31 +116,33 @@
 
 .checked{
     background-color: #ddd;
-}
 
-.checked>span{
-    position: relative;
-}
+    div{
+        position: relative;
+        width: fit-content;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
 
-.checked>span::after{
-    background-color: black;
-    position: absolute;
-    content: '';
-    top: 50%;
-    left: 0;
-    width: 0%;
-    height: 2px;
-    animation-name: strikethrough;
-    animation-duration: 0.5s;
-    animation-fill-mode: forwards;
-}
-
-.checked.to-delete>span::after{
-    background-color: red;
-}
-
-.to-delete{
-    color: red;
+        &::after{
+            background-color: black;
+            position: absolute;
+            content: '';
+            top: 50%;
+            left: 0;
+            height: 2px;
+            animation-name: strikethrough;
+            animation-duration: 0.5s;
+            animation-fill-mode: both;
+        }
+    }
+    
+    &.to-delete{
+        color: red;
+        & > div::after{
+            background-color: red;
+        }
+    }
 }
 
 .input-container{
@@ -231,10 +234,10 @@
 }
 
 @keyframes strikethrough {
-    0%{
+    from{
         width: 0%;
     }
-    100%{
+    to{
         width: 100%;
     }
 }

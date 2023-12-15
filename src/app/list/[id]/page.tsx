@@ -37,10 +37,6 @@ export default function Lists(props: Props){
     )
 
     useEffect(() => {
-        saveList();
-    }, [JSON.stringify(list)]);
-
-    let saveList = () => {
         setSaved(false);
         setSavingList(true);
         fetch("/api/list/" + props.params.id, {
@@ -54,7 +50,7 @@ export default function Lists(props: Props){
             setSavingList(false);
             setEditListDialogOpen(false);
         });
-    }
+    }, [JSON.stringify(list)]);
 
     let saveMetaData = () => {
         setList({...list!, name: newName || list!.name, viewers: newViewers});
@@ -236,7 +232,7 @@ export default function Lists(props: Props){
                     <div className={styles['list-container']}>
                         {list?.elements.map((e, i) => 
                             <div key={i} className={getElementClassName(e,i)} onClick={() => clickElement(i)}>
-                                <span>{e.name}</span>
+                                <div>{e.name}</div>
                             </div>
                         )}
                     </div>
