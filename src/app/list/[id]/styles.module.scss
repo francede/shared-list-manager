@@ -63,28 +63,36 @@
     visibility: hidden;
 }
 
-
-.list-title{
-    font-size: 1.2em;
-    font-weight: bold;
+.list-title-row{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
     padding: 12px 24px;
+
+    .list-title-container{
+        display: flex;
+        flex-direction: column;
+    }
+
+    .list-title{
+        font-size: 1.2em;
+        font-weight: bold;
+    }
+
+    .list-owner, .list-saved > span{
+        font-size: small;
+        font-weight: normal;
+        color: grey;
+        align-self: center;
+    }
+
+    .list-saved{
+        display: flex;
+        align-items: center;
+    }
 }
 
-.list-title div{
-    display: flex;
-    flex-direction: row;
-}
-
-.list-title span{
-    font-size: small;
-    font-weight: normal;
-    color: grey;
-    align-self: center;
-}
 
 .list-container{
     display: flex;

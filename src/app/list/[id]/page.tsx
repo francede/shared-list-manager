@@ -127,7 +127,7 @@ export default function Lists(props: Props){
 
     let getSavedText = () => {
         if(saved){
-            return (<><span>saved</span><span className="material-symbols-outlined">done</span></>);
+            return (<div className={styles['list-saved']}><span>saved</span><span className="material-symbols-outlined">done</span></div>);
         }
         return <span>saving...</span>;
     }
@@ -226,9 +226,12 @@ export default function Lists(props: Props){
             {
                 list === null ? <div style={{width: 'fit-content', alignSelf: 'center', padding: '20px'}}><Spinner></Spinner></div> : 
                 <>
-                    <div className={styles['list-title']}>
-                        {list?.name} <span style={{fontSize:'small'}}>(owned by: {list.owner})</span>
-                        <div>{getSavedText()}</div>
+                    <div className={styles['list-title-row']}>
+                        <div className={styles['list-title-container']}>
+                            <span className={styles['list-title']}>{list?.name}</span>
+                            <span className={styles['list-owner']}>created by: {list.owner}</span>
+                        </div>
+                        {getSavedText()}
                     </div>
                     <div className={styles['list-container']}>
                         {list?.elements.map((e, i) => 
