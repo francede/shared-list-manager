@@ -73,6 +73,7 @@
     .list-title-container{
         display: flex;
         flex-direction: column;
+        align-items: flex-start;
     }
 
     .list-title{
@@ -84,7 +85,6 @@
         font-size: small;
         font-weight: normal;
         color: grey;
-        align-self: center;
     }
 
     .list-saved{
