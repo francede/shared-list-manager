@@ -18,13 +18,12 @@ export async function PUT(request: NextRequest, params: {params: {id: string}}) 
     let response;
 
     await SharedListRepository.getSharedList(params.params.id).then(async res => {
-        if(res?.owner !== user){
-            response = NextResponse.json({message: 'not list owner'}, {status: 403});
-        }else{
-            await request.json().then((data: SharedList) => SharedListRepository.updateSharedList(params.params.id, data).then(res => {
+        await request.json().then(async (data: SharedList) =>  {
+            await SharedListRepository.updateSharedList(
+                params.params.id, 
+                (res?.owner !== user && data?.elements) ? {elements: data.elements} : data).then(res => {
                 response = NextResponse.json(res);
-            }));
-        }
+        })});
     })
 
     return response;

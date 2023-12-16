@@ -65,10 +65,10 @@ export type SharedListCreateRequest = {
 export type SharedListResponse = {_id: string} & SharedList;
 
 export type SharedList = {
-    name: string
-    owner: string
-    viewers: string[]
-    elements: {
+    name?: string
+    owner?: string
+    viewers?: string[]
+    elements?: {
         name: string
         checked: boolean
     }[]

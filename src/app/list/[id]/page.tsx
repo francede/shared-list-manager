@@ -73,9 +73,9 @@ export default function Lists(props: Props){
     }
 
     let clearChecked = () => {
-        let elements = [...list!.elements];
+        let elements = [...list!.elements!];
         elements = elements.filter((e) => !e.checked);
-        if(elements.length === list?.elements.length) return;
+        if(elements.length === list?.elements?.length) return;
 
         setUndoEventState("clear checked")
 
@@ -86,7 +86,7 @@ export default function Lists(props: Props){
     }
 
     let clickElement = (i: number) => {
-        let elements = [...list!.elements];
+        let elements = [...list!.elements!];
         if(elements[i].checked){
             if(i === indexToDelete){
                 setUndoEventState("delete");
@@ -107,7 +107,7 @@ export default function Lists(props: Props){
 
     let createElement = () => {
         if(!input) return;
-        let elements = [...list!.elements, {name: input, checked: false}]
+        let elements = [...list!.elements!, {name: input, checked: false}]
         let newList = list;
         newList!.elements = elements;
         setList(newList);
@@ -230,7 +230,7 @@ export default function Lists(props: Props){
                         {getSavedText()}
                     </div>
                     <div className={styles['list-container']}>
-                        {list?.elements.map((e, i) => 
+                        {list?.elements?.map((e, i) => 
                             <div key={i} className={getElementClassName(e,i)} onClick={() => clickElement(i)}>
                                 <div>{e.name}</div>
                             </div>
