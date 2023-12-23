@@ -1,3 +1,4 @@
+import { ChangeStream, ChangeStreamUpdateDocument } from "mongodb";
 import mongoose from "mongoose";
 
 export class SharedListRepository{
@@ -53,6 +54,10 @@ export class SharedListRepository{
     static async deleteSharedList(id: string){
         await this.connect();
         return await this.sharedListModel.findByIdAndDelete(id).exec();
+    }
+
+    static async setListener(onChange: (data: ChangeStreamUpdateDocument)=>void){
+        this.sharedListModel.watch().on("change", onChange);
     }
 }
 
