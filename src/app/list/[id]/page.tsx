@@ -16,6 +16,7 @@ export default function Lists(props: Props){
     const session = useSession();
     const [list, setList] = useState<(SharedListResponse) | null>(null);
     const [indexToDelete, setIndexToDelete] = useState<number | null>(null);
+    const [changedItemIndexes, setChangedItemIndexes] = useState<{[key: number]: Date}>({});
     const [saved, setSaved] = useState<boolean>(true);
     const [input, setInput] = useState<string>('');
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
@@ -31,7 +32,7 @@ export default function Lists(props: Props){
 
     useEffect(() => {
         fetch("/api/list/" + props.params.id)
-        .then((res) => res.json()).catch((e) => {console.log("error", e)})
+        .then((res) => res.json())
         .then((data: SharedListResponse) => {
             setList(data);
         }).catch((e) => {console.log("error", e)});
@@ -42,8 +43,20 @@ export default function Lists(props: Props){
         }
         eventSource.onmessage = (event) => {
             fetch("/api/list/" + props.params.id)
-                .then((res) => res.json()).catch((e) => {console.log("error", e)})
+                .then((res) => res.json())
                 .then((data: SharedListResponse) => {
+                    const newChangedItemIndexes: {[key: number]: Date} = {...changedItemIndexes};
+                    data.elements?.forEach((newItem, newItemIndex) => {
+                        const index = list?.elements?.findIndex(oldItem => oldItem.name === newItem.name);
+                        if(index === -1){
+                            newChangedItemIndexes[newItemIndex] = new Date();
+                        }else{
+                            const oldItem = list?.elements![index!];
+                            if(oldItem?.checked !== newItem.checked){
+                                newChangedItemIndexes[newItemIndex] = new Date();
+                            }
+                        }
+                    });
                     setList(data);
                 }).catch((e) => {console.log("error", e)});
         }
@@ -247,7 +260,7 @@ export default function Lists(props: Props){
                     <div className={styles['list-container']}>
                         {list?.elements?.map((e, i) => 
                             <div key={i} className={getElementClassName(e,i)} onClick={() => clickElement(i)}>
-                                <div>{e.name}</div>
+                                <div>{e.name}  millis: {changedItemIndexes[i]?.getMilliseconds()}</div>
                             </div>
                         )}
                     </div>
