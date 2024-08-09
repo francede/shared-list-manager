@@ -1,6 +1,6 @@
 "use client"
 
-import { SharedListRepository, SharedListResponse } from '@/services/sharedListRepository'
+import { SharedListResponse } from '@/app/api/services/sharedListRepository'
 import { ReactNode, createRef, useEffect, useRef, useState } from 'react'
 import styles from './styles.module.scss'
 import '@/app/globalicons.css'

@@ -1,7 +1,4 @@
-import { SharedList, SharedListRepository } from "@/services/sharedListRepository";
-import { IncomingMessage, ServerResponse } from "http";
-import { NextApiResponse } from "next";
-import { getServerSession } from "next-auth";
+import { SharedListRepository } from "@/app/api/services/sharedListRepository";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest, params: {params: {id: string}}) {

@@ -1,6 +1,7 @@
-import { SharedList, SharedListRepository } from "@/services/sharedListRepository";
+import { SharedList, SharedListRepository } from "@/app/api/services/sharedListRepository";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
+import { CheckEvent } from "../../services/events";
 
 export async function GET(_: NextRequest, params: {params: {id: string}}) {
     let sharedList;
@@ -18,10 +19,15 @@ export async function PUT(request: NextRequest, params: {params: {id: string}}) 
     let response;
 
     await SharedListRepository.getSharedList(params.params.id).then(async res => {
+        let e: CheckEvent = {
+            type: "CHECK",
+            elements: [],
+            index: 1
+        }
         await request.json().then(async (data: SharedList) =>  {
             await SharedListRepository.updateSharedList(
                 params.params.id, 
-                (res?.owner !== user && data?.elements) ? {elements: data.elements} : data).then(res => {
+                (res?.list.owner !== user && data?.elements) ? {elements: data.elements} : data, e).then(res => {
                 response = NextResponse.json(res);
         })});
     })
@@ -36,7 +42,7 @@ export async function DELETE(request: NextRequest, params: {params: {id: string}
     let response;
 
     await SharedListRepository.getSharedList(params.params.id).then(res => {
-        if(res?.owner !== user){
+        if(res?.list.owner !== user){
             response =  NextResponse.json({message: 'not list owner'}, {status: 403})
             return;
         }

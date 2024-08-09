@@ -1,13 +1,16 @@
-import { ChangeStream, ChangeStreamUpdateDocument } from "mongodb";
-import mongoose from "mongoose";
+import { ChangeStreamUpdateDocument } from "mongodb";
+import mongoose, { ObjectId } from "mongoose";
+import { SLEvent } from "./events";
 
 export class SharedListRepository{
     static readonly MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
     static sharedListModel = mongoose.models["SharedList"] || mongoose.model("SharedList", new mongoose.Schema<SharedList>({
+        _id: mongoose.Schema.Types.ObjectId,
         name: {type: String, minlength:1},
         owner: String,
         viewers: [String],
         elements: [new mongoose.Schema({
+            id: mongoose.Schema.Types.ObjectId,
             name: {type: String, minlength:1}, 
             checked: Boolean
         })],
@@ -46,7 +49,7 @@ export class SharedListRepository{
         return await new this.sharedListModel(list).save();
     }
 
-    static async updateSharedList(id: string, list: SharedList): Promise<SharedListResponse>{
+    static async updateSharedList(id: string, list: SharedList, event: SLEvent): Promise<SharedListResponse>{
         await this.connect();
         return await this.sharedListModel.findByIdAndUpdate(id, list).exec();
     }
@@ -67,14 +70,25 @@ export type SharedListCreateRequest = {
     viewers: string[]
 }
 
-export type SharedListResponse = {_id: string} & SharedList;
+export type SharedListUpdateRequest = {
+    event: SLEvent
+    list: SharedList
+}
+
+export type SharedListResponse = {
+    event: SLEvent
+    list: SharedList
+};
 
 export type SharedList = {
+    _id?: mongoose.Types.ObjectId
     name?: string
     owner?: string
     viewers?: string[]
     elements?: {
+        id: mongoose.Types.ObjectId
         name: string
         checked: boolean
     }[]
 };
+

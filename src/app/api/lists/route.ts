@@ -1,4 +1,4 @@
-import { SharedListRepository } from "@/services/sharedListRepository";
+import { SharedListRepository } from "@/app/api/services/sharedListRepository";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 
