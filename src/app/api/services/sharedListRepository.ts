@@ -49,7 +49,8 @@ export class SharedListRepository{
         return await new this.sharedListModel(list).save();
     }
 
-    static async updateSharedList(id: string, list: SharedList, event: SLEvent): Promise<SharedListResponse>{
+    static async updateSharedList(id: string, list: SharedListUpdateRequest): Promise<SharedListResponse>{
+        //TODO: Logic for all different event types, INCLUDING METADATA
         await this.connect();
         return await this.sharedListModel.findByIdAndUpdate(id, list).exec();
     }

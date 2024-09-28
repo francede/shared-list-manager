@@ -14,13 +14,17 @@ export type ClearEvent = SLEvent & {
     
 }
 
+export type MetadataEvent = SLEvent & {
+    //TODO
+}
+
 export type MoveEvent = SLEvent & {
     //TODO
 }
 
 export type SLEvent = {
-    type: "CHECK" | "DELETE" | "ADD" | "CLEAR" | "MOVE"
-    elements: {
+    type: "CHECK" | "DELETE" | "ADD" | "CLEAR" | "MOVE" | "METADATA"
+    updatedElements: {
         name: string
         checked: boolean
     }[]

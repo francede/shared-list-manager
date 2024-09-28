@@ -1,4 +1,4 @@
-import { SharedList, SharedListRepository } from "@/app/api/services/sharedListRepository";
+import { SharedList, SharedListRepository, SharedListUpdateRequest } from "@/app/api/services/sharedListRepository";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { CheckEvent } from "../../services/events";
@@ -19,15 +19,8 @@ export async function PUT(request: NextRequest, params: {params: {id: string}}) 
     let response;
 
     await SharedListRepository.getSharedList(params.params.id).then(async res => {
-        let e: CheckEvent = {
-            type: "CHECK",
-            elements: [],
-            index: 1
-        }
-        await request.json().then(async (data: SharedList) =>  {
-            await SharedListRepository.updateSharedList(
-                params.params.id, 
-                (res?.list.owner !== user && data?.elements) ? {elements: data.elements} : data, e).then(res => {
+        await request.json().then(async (updateRequest: SharedListUpdateRequest) =>  {
+            await SharedListRepository.updateSharedList(params.params.id, updateRequest).then(res => {
                 response = NextResponse.json(res);
         })});
     })
