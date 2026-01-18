@@ -1,7 +1,7 @@
 "use client"
 
 import { SharedListResponse } from '@/app/api/services/sharedListRepository'
-import { ReactNode, createRef, useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
 import '@/app/globalicons.css'
 import React from 'react';
@@ -27,7 +27,6 @@ export default function Lists(props: Props){
     const [newViewers, setNewViewers] = useState<string[]>([]);
     const [newViewerInput, setNewViewerInput] = useState<string>('');
     const [undoEvent, setUndoEvent] = useState<{oldListState: SharedListResponse, undoTarget: string} | null>(null);
-    const [listEventSource, setListEventSource] = useState<EventSource | null>(null);
 
     useEffect(() => {
         fetch("/api/list/" + props.params.id)
@@ -35,20 +34,6 @@ export default function Lists(props: Props){
         .then((data: SharedListResponse) => {
             setList(data);
         }).catch((e) => {console.log("error", e)});
-
-        const eventSource = new EventSource("/api/list/" + props.params.id + "/sse");
-        eventSource.onopen = () => {
-            setListEventSource(eventSource);
-        }
-        eventSource.onmessage = (event) => {
-            fetch("/api/list/" + props.params.id)
-                .then((res) => res.json()).catch((e) => {console.log("error", e)})
-                .then((data: SharedListResponse) => {
-                    setList(data);
-                }).catch((e) => {console.log("error", e)});
-        }
-
-        
     }, [props.params.id]);
 
     useEffect(() => {

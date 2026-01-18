@@ -9,14 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "ably": "^2.16.0",
     "mongodb": "6.3",
     "mongoose": "^8.0.3",
     "next": "14.0.4",
     "next-auth": "^4.24.5",
     "react": "^18",
     "react-dom": "^18",
-    "sass": "^1.69.5",
-    "ws": "^8.18.1"
+    "sass": "^1.69.5"
   },
   "devDependencies": {
     "@types/node": "^20",

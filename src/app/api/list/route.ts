@@ -1,16 +1,17 @@
-import { SharedListRepository } from "@/app/api/services/sharedListRepository";
-import { getServerSession } from "next-auth";
+import { createSharedList } from "@/app/api/services/sharedListRepository";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
-    const session = await getServerSession(request as any) as any;
-    if(!session) return NextResponse.json({message: 'unauthenticated'}, {status: 401})
-    const user = session.user.email;
+export async function POST(req: NextRequest) {
+    const email = req.headers.get("x-user-email");
+
+    if (!email) {
+        return NextResponse.json({message: 'unauthenticated'}, {status: 401})
+    }
     
     let response;
-    await request.json().then((data) => SharedListRepository.createSharedList(data.name, user, data.viewers).then(res => {
+    await req.json().then((data) => createSharedList(data.name, email, data.viewers).then(res => {
         response = res;
     }));
 
-    return Response.json(response);
+    return NextResponse.json(response);
 }

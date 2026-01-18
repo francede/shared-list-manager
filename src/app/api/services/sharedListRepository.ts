@@ -1,88 +1,66 @@
-import { ChangeStreamUpdateDocument } from "mongodb";
-import mongoose, { ObjectId } from "mongoose";
-import { SLEvent } from "./events";
+import { ObjectId } from "mongodb";
+import mongoose from "mongoose";
+import * as Ably from "ably";
 
-export class SharedListRepository{
-    static readonly MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
-    static sharedListModel = mongoose.models["SharedList"] || mongoose.model("SharedList", new mongoose.Schema<SharedList>({
-        _id: mongoose.Schema.Types.ObjectId,
-        name: {type: String, minlength:1},
-        owner: String,
-        viewers: [String],
-        elements: [new mongoose.Schema({
-            id: mongoose.Schema.Types.ObjectId,
-            name: {type: String, minlength:1}, 
-            checked: Boolean
-        })],
-        
-    }), "SharedList");
+const MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
+const sharedListModel = mongoose.models["SharedList"] || mongoose.model("SharedList", new mongoose.Schema<SharedList>({
+    _id: mongoose.Schema.Types.ObjectId,
+    version: Number,
+    name: {type: String, minlength:1},
+    owner: String,
+    viewers: [String],
+    elements: [new mongoose.Schema({
+        id: mongoose.Schema.Types.ObjectId,
+        name: {type: String, minlength:1}, 
+        checked: Boolean,
+        position: Number
+    })],
+    
+}), "SharedList");
 
-    static async connect(){
-        await mongoose.connect(this.MONGO_CONNECTION_STRING!)
-            .then(() => console.log("connected"))
-            .catch((e) => console.log("error while connecting", e));
-    }
+const ably = new Ably.Rest(process.env.ABLY_SERVER_API_KEY!)
 
-    static async getSharedList(id: string): Promise<SharedListResponse | null>{
-        await this.connect();
-        return await this.sharedListModel.findById(id).exec();
-    }
 
-    static async getSharedListsByOwner(owner: string): Promise<SharedListResponse[]>{
-        await this.connect();
-        return await this.sharedListModel.find({owner: owner}).exec();
-    }
-
-    static async getSharedListsByViewer(viewer: string): Promise<SharedListResponse[]>{
-        await this.connect();
-        return await this.sharedListModel.find({viewers: viewer}).exec();
-    }
-
-    static async createSharedList(name: string, owner: string, viewers: string[]){
-        let list: SharedList = {
-            name: name,
-            owner: owner,
-            viewers: viewers,
-            elements: []
-        }
-        await this.connect();
-        return await new this.sharedListModel(list).save();
-    }
-
-    static async updateSharedList(id: string, list: SharedListUpdateRequest): Promise<SharedListResponse>{
-        //TODO: Logic for all different event types, INCLUDING METADATA
-        await this.connect();
-        return await this.sharedListModel.findByIdAndUpdate(id, list).exec();
-    }
-
-    static async deleteSharedList(id: string){
-        await this.connect();
-        return await this.sharedListModel.findByIdAndDelete(id).exec();
-    }
-
-    static async setListener(onChange: (data: ChangeStreamUpdateDocument)=>void){
-        this.sharedListModel.watch().on("change", onChange);
-    }
+async function connect(){
+    await mongoose.connect(MONGO_CONNECTION_STRING!)
+        .catch((e) => console.log("error while connecting", e));
 }
 
-export type SharedListCreateRequest = {
-    name: string
-    owner: string
-    viewers: string[]
+export async function getSharedList(id: string): Promise<SharedList | null>{
+    await connect();
+    return await sharedListModel.findById(id).exec();
 }
 
-export type SharedListUpdateRequest = {
-    event: SLEvent
-    list: SharedList
+export async function getSharedListsByOwner(owner: string): Promise<SharedList[]>{
+    await connect();
+    return await sharedListModel.find({owner: owner}).exec();
 }
 
-export type SharedListResponse = {
-    event: SLEvent
-    list: SharedList
-};
+export async function getSharedListsByViewer(viewer: string): Promise<SharedList[]>{
+    await connect();
+    return await sharedListModel.find({viewers: viewer}).exec();
+}
+
+export async function createSharedList(name: string, owner: string, viewers: string[]){
+    let list: SharedList = {
+        _id: new ObjectId(),
+        name: name,
+        owner: owner,
+        viewers: viewers,
+        elements: []
+    }
+    await connect();
+    return await new sharedListModel(list).save();
+}
+
+export async function deleteSharedList(id: string){
+    await connect();
+    return await sharedListModel.findByIdAndDelete(id).exec();
+}
 
 export type SharedList = {
     _id?: mongoose.Types.ObjectId
+    version?: number
     name?: string
     owner?: string
     viewers?: string[]
@@ -93,3 +71,185 @@ export type SharedList = {
     }[]
 };
 
+export async function updateSharedListAddItem(listID: string, text?: string): Promise<boolean>{
+    await connect();
+
+    if (!text) return false
+
+    const result = await sharedListModel.aggregate([
+        { $match: { _id: new ObjectId(listID) } },
+        {
+            $project: {
+                maxPosition: { $max: "$elements.position" }
+            }
+        }
+    ]);
+
+    const maxPosition = result[0]?.maxPosition ?? 0;
+
+    const element = {
+        _id: new ObjectId(),
+        name: text,
+        checked: false,
+        position: maxPosition + 100
+    }
+    await sharedListModel.updateOne(
+        {_id: listID},
+        {
+            $push: {elements: element},
+            $inc: {version: 1}
+        }
+    )
+    const updated = await sharedListModel.findOne(
+        { _id: new ObjectId(listID) }
+    );
+
+    await ably.channels.get(`list:${listID}`).publish("SLEvent", {
+        type: "ADD",
+        element: element,
+        version: updated.version
+    })
+    return true
+}
+
+export async function updateSharedListCheckItem(listID: string, elementID?: string): Promise<boolean>{
+    await connect();
+
+    if (!elementID) return false
+    await sharedListModel.updateOne(
+        {_id: listID, "elements._id": new ObjectId(elementID)},
+        {
+            $set: { "elements.$.checked": true },
+            $inc: {version: 1}
+        }
+    )
+    const updated = await sharedListModel.findOne(
+        { _id: new ObjectId(listID) },
+    );
+
+    await ably.channels.get(`list:${listID}`).publish("SLEvent", {
+        type: "CHECK",
+        elementID,
+        version: updated.version
+    })
+    return true
+}
+
+export async function updateSharedListDeleteItem(listID: string, elementID?: string): Promise<boolean>{
+    await connect();
+
+    if (!elementID) return false
+    await sharedListModel.updateOne(
+        {_id: new ObjectId(listID)},
+        {
+            $pull: {elements: {_id: new ObjectId(elementID)}},
+            $inc: {version: 1}
+        }
+    )
+    const updated = await sharedListModel.findOne(
+        { _id: new ObjectId(listID) }
+    );
+
+    await ably.channels.get(`list:${listID}`).publish("SLEvent", {
+        type: "DELETE",
+        elementID,
+        version: updated.version
+    })
+    return true
+}
+
+export async function updateSharedListClearChecked(listID: string): Promise<boolean>{
+    await connect();
+
+    await sharedListModel.updateOne(
+        {_id: new ObjectId(listID)},
+        {
+            $pull: {elements: {checked: true}},
+            $inc: {version: 1}
+        }
+    )
+    const updated = await sharedListModel.findOne(
+        { _id: new ObjectId(listID) }
+    );
+
+    await ably.channels.get(`list:${listID}`).publish("SLEvent", {
+        type: "CLEAR",
+        version: updated.version
+    })
+    return true
+}
+
+export async function updateSharedListEditItem(listID: string, elementID?: string, text?: string): Promise<boolean>{
+    await connect();
+
+    if (!text || !elementID) return false
+    await sharedListModel.updateOne(
+        {_id: new ObjectId(listID), "elements._id": new ObjectId(elementID)},
+        {
+            $set: { 
+                "elements.$.name": text,
+            },
+            $inc: {version: 1}
+        }
+    )
+    const updated = await sharedListModel.findOne(
+        { _id: new ObjectId(listID) }
+    );
+
+    await ably.channels.get(`list:${listID}`).publish("SLEvent", {
+        type: "EDIT",
+        elementID,
+        newText: text,
+        version: updated.version
+    })
+    
+    return true
+}
+
+export async function updateSharedListMoveItem(listID: string, elementID?: string, elementIDBefore?: string, elementIDAfter?: string): Promise<boolean>{
+    await connect();
+
+    if (!elementID || (!elementIDBefore && !elementIDAfter)) return false
+
+    const elementBefore = (await sharedListModel.findOne(
+        {_id: new ObjectId(listID), "elements._id": new ObjectId(elementIDBefore)},
+        {"elements.$": 1}
+    ))?.elements[0];
+
+    const elementAfter = (await sharedListModel.findOne(
+        {_id: new ObjectId(listID), "elements._id": new ObjectId(elementIDAfter)},
+        {"elements.$": 1}
+    ))?.elements[0];
+
+    let newPosition;
+
+    if (!elementAfter){
+        newPosition = elementBefore.position + 100
+    }else if(!elementBefore){
+        newPosition = elementAfter.position - 100
+    }else{
+        newPosition = (elementBefore.position + elementAfter.position) / 2
+    }
+
+    await sharedListModel.updateOne(
+        {_id: new ObjectId(listID), "elements._id": new ObjectId(elementID)},
+        {
+            $set: { 
+                "elements.$.position": newPosition,
+            },
+            $inc: {version: 1}
+        }
+    )
+    const updated = await sharedListModel.findOne(
+        { _id: new ObjectId(listID) }
+    );
+
+    await ably.channels.get(`list:${listID}`).publish("SLEvent", {
+        type: "MOVE",
+        elementID,
+        newPosition: newPosition,
+        version: updated.version
+    })
+    
+    return true
+}
