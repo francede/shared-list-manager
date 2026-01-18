@@ -18,7 +18,7 @@ export async function POST(req: NextRequest, params: {params: {id: string}}) {
     return response;
 }
 
-type EditItemRequestBody = {
+export type EditItemRequestBody = {
     itemID: string
     text: string
 }

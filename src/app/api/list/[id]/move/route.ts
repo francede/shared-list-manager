@@ -18,7 +18,7 @@ export async function POST(req: NextRequest, params: {params: {id: string}}) {
     return response;
 }
 
-type MoveItemRequestBody = {
+export type MoveItemRequestBody = {
     itemID: string
     itemIDBefore?: string
     itemIDAfter?: string

@@ -1,6 +1,6 @@
 "use client"
 
-import { SharedListResponse } from '@/app/api/services/sharedListRepository'
+import { SharedList } from '@/app/api/services/sharedListRepository'
 import { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
 import '@/app/globalicons.css'
@@ -14,7 +14,7 @@ import { useSession } from 'next-auth/react'
 export default function Lists(props: Props){
     const router = useRouter();
     const session = useSession();
-    const [list, setList] = useState<(SharedListResponse) | null>(null);
+    const [list, setList] = useState<(SharedList) | null>(null);
     const [indexToDelete, setIndexToDelete] = useState<number | null>(null);
     const [saved, setSaved] = useState<boolean>(true);
     const [input, setInput] = useState<string>('');
@@ -26,12 +26,11 @@ export default function Lists(props: Props){
     const [newName, setNewName] = useState<string>('');
     const [newViewers, setNewViewers] = useState<string[]>([]);
     const [newViewerInput, setNewViewerInput] = useState<string>('');
-    const [undoEvent, setUndoEvent] = useState<{oldListState: SharedListResponse, undoTarget: string} | null>(null);
 
     useEffect(() => {
         fetch("/api/list/" + props.params.id)
         .then((res) => res.json()).catch((e) => {console.log("error", e)})
-        .then((data: SharedListResponse) => {
+        .then((data: SharedList) => {
             setList(data);
         }).catch((e) => {console.log("error", e)});
     }, [props.params.id]);
@@ -67,7 +66,7 @@ export default function Lists(props: Props){
             method: "DELETE",
         })
         .then((res) => res.json())
-        .then((data) => {
+        .then(() => {
             router.replace('/lists');
         });
     }
@@ -76,8 +75,6 @@ export default function Lists(props: Props){
         let elements = [...list!.elements!];
         elements = elements.filter((e) => !e.checked);
         if(elements.length === list?.elements?.length) return;
-
-        setUndoEventState("clear checked")
 
         let newList = list;
         list!.elements = elements;
@@ -89,7 +86,6 @@ export default function Lists(props: Props){
         let elements = [...list!.elements!];
         if(elements[i].checked){
             if(i === indexToDelete){
-                setUndoEventState("delete");
                 elements.splice(i, 1);
                 setIndexToDelete(null);
             }else{
@@ -97,7 +93,6 @@ export default function Lists(props: Props){
                 return
             }
         }else{
-            setUndoEventState("check");
             elements[i].checked = true;
         }
         let newList = list;
@@ -154,16 +149,6 @@ export default function Lists(props: Props){
         setEditListDialogOpen(false);
     }
 
-    let setUndoEventState = (target: string) => {
-        setUndoEvent({oldListState: structuredClone(list!), undoTarget: target});
-    }
-
-    let undo = () => {
-        if(!undoEvent) return;
-        setList(undoEvent?.oldListState);
-        setUndoEvent(null);
-    }
-    
     return (
         <div className={styles['list-page']}>
             {editListDialogOpen ? 
@@ -214,9 +199,7 @@ export default function Lists(props: Props){
                     <button className={styles['menu-button']} onClick={() => clearChecked()}><span className="material-symbols-outlined">delete_forever</span>Clear checked</button>
                     {list?.owner === session.data?.user?.email ?
                     <button className={styles['menu-button']} onClick={() => openEditListDialog()}><span className="material-symbols-outlined">edit</span>Edit</button>
-                    : null}
-                    <button className={styles['menu-button']} disabled={!undoEvent} onClick={() => undo()}><span className="material-symbols-outlined">undo</span>Undo {undoEvent?.undoTarget}</button>
-                    
+                    : null}                    
                 </div>
             </div>
             {

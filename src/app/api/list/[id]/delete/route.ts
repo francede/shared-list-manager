@@ -18,6 +18,6 @@ export async function POST(req: NextRequest, params: {params: {id: string}}) {
     return response;
 }
 
-type DeletItemRequestBody = {
+export type DeletItemRequestBody = {
     itemID: string
 }
