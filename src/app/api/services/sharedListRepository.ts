@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import mongoose from "mongoose";
 import * as Ably from "ably";
+import sharedListUtils from "@/utils/sharedListUtils";
 
 const MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
 const sharedListModel = mongoose.models["SharedList"] || mongoose.model("SharedList", new mongoose.Schema<SharedList>({
@@ -10,7 +11,7 @@ const sharedListModel = mongoose.models["SharedList"] || mongoose.model("SharedL
     owner: String,
     viewers: [String],
     items: [new mongoose.Schema({
-        id: mongoose.Schema.Types.ObjectId,
+        _id: mongoose.Schema.Types.ObjectId,
         text: {type: String, minlength:1}, 
         checked: Boolean,
         position: Number
@@ -43,7 +44,7 @@ export async function getSharedListsByViewer(viewer: string): Promise<SharedList
 
 export async function createSharedList(name: string, owner: string, viewers: string[]){
     let list: SharedList = {
-        _id: new ObjectId(),
+        _id: new ObjectId().toString(),
         name: name,
         owner: owner,
         viewers: viewers,
@@ -58,7 +59,7 @@ export async function deleteSharedList(id: string){
     return await sharedListModel.findByIdAndDelete(id).exec();
 }
 
-export async function updateSharedListAddItem(listID: string, text?: string): Promise<boolean>{
+export async function updateSharedListAddItem(listID: string, opId: string, text?: string): Promise<boolean>{
     await connect();
 
     if (!text) return false
@@ -76,12 +77,13 @@ export async function updateSharedListAddItem(listID: string, text?: string): Pr
 
     const itemId = new ObjectId()
 
-    const element = {
-        _id: itemId,
+    const element: SharedListItem = {
+        _id: itemId.toString(),
         text: text,
         checked: false,
         position: maxPosition + 100
     }
+
     await sharedListModel.updateOne(
         {_id: listID},
         {
@@ -94,15 +96,16 @@ export async function updateSharedListAddItem(listID: string, text?: string): Pr
     );
 
     const event: AddItemEvent = {
-        item: {...element, _id: itemId.toString()},
-        version: updated.version
+        item: {...element, id: itemId.toString()},
+        version: updated.version,
+        opId
     }
 
     await ably.channels.get(`list:${listID}`).publish("ADD", event)
     return true
 }
 
-export async function updateSharedListCheckItem(listID: string, itemId?: string): Promise<boolean>{
+export async function updateSharedListCheckItem(listID: string, opId: string, itemId?: string): Promise<boolean>{
     await connect();
 
     if (!itemId) return false
@@ -119,14 +122,15 @@ export async function updateSharedListCheckItem(listID: string, itemId?: string)
     
     const event: CheckItemEvent = {
         itemId: itemId,
-        version: updated.version
+        version: updated.version,
+        opId
     }
 
     await ably.channels.get(`list:${listID}`).publish("CHECK", event)
     return true
 }
 
-export async function updateSharedListDeleteItem(listID: string, itemId?: string): Promise<boolean>{
+export async function updateSharedListDeleteItem(listID: string, opId: string, itemId?: string): Promise<boolean>{
     await connect();
 
     if (!itemId) return false
@@ -143,14 +147,15 @@ export async function updateSharedListDeleteItem(listID: string, itemId?: string
 
     const event: DeleteItemEvent = {
         itemId,
-        version: updated.version
+        version: updated.version,
+        opId
     }
 
     await ably.channels.get(`list:${listID}`).publish("DELETE", event)
     return true
 }
 
-export async function updateSharedListClearChecked(listID: string): Promise<boolean>{
+export async function updateSharedListClearChecked(listID: string, opId: string): Promise<boolean>{
     await connect();
 
     await sharedListModel.updateOne(
@@ -165,14 +170,15 @@ export async function updateSharedListClearChecked(listID: string): Promise<bool
     );
 
     const event: ClearCheckedEvent = {
-        version: updated.version
+        version: updated.version,
+        opId
     }
 
     await ably.channels.get(`list:${listID}`).publish("CLEAR", event)
     return true
 }
 
-export async function updateSharedListEditItem(listID: string, itemId?: string, text?: string): Promise<boolean>{
+export async function updateSharedListEditItem(listID: string, opId: string, itemId?: string, text?: string): Promise<boolean>{
     await connect();
 
     if (!text || !itemId) return false
@@ -192,7 +198,8 @@ export async function updateSharedListEditItem(listID: string, itemId?: string, 
     const event: EditItemEvent = {
         itemId,
         text,
-        version: updated.version
+        version: updated.version,
+        opId
     }
 
     await ably.channels.get(`list:${listID}`).publish("EDIT", event)
@@ -200,7 +207,7 @@ export async function updateSharedListEditItem(listID: string, itemId?: string, 
     return true
 }
 
-export async function updateSharedListMoveItem(listID: string, itemId?: string, itemIdBefore?: string, itemIdAfter?: string): Promise<boolean>{
+export async function updateSharedListMoveItem(listID: string, opId: string, itemId?: string, itemIdBefore?: string, itemIdAfter?: string): Promise<boolean>{
     await connect();
 
     if (!itemId || (!itemIdBefore && !itemIdAfter)) return false
@@ -215,15 +222,7 @@ export async function updateSharedListMoveItem(listID: string, itemId?: string, 
         {"elements.$": 1}
     ))?.elements[0];
 
-    let newPosition;
-
-    if (!elementAfter){
-        newPosition = elementBefore.position + 100
-    }else if(!elementBefore){
-        newPosition = elementAfter.position - 100
-    }else{
-        newPosition = (elementBefore.position + elementAfter.position) / 2
-    }
+    const newPosition = sharedListUtils.calculatePosition(elementBefore, elementAfter);
 
     await sharedListModel.updateOne(
         {_id: new ObjectId(listID), "elements._id": new ObjectId(itemId)},
@@ -242,7 +241,8 @@ export async function updateSharedListMoveItem(listID: string, itemId?: string, 
     const event: MoveItemEvent = {
         itemId,
         position: newPosition,
-        version: updated.version
+        version: updated.version,
+        opId
     }
 
     await ably.channels.get(`list:${listID}`).publish("MOVE", event)
@@ -251,51 +251,53 @@ export async function updateSharedListMoveItem(listID: string, itemId?: string, 
 }
 
 export type SharedList = {
-    _id?: mongoose.Types.ObjectId
+    _id?: string
     version?: number
     name?: string
     owner?: string
     viewers?: string[]
-    items?: {
-        id: mongoose.Types.ObjectId
-        text: string
-        checked: boolean
-        position: number
-    }[]
+    items?: SharedListItem[]
 };
+
+export type SharedListItem = {
+    _id: string
+    text: string
+    checked: boolean
+    position: number
+    opId?: string
+}
+
+export type SLEvent = {
+    version: number
+    opId: string
+}
 
 export type AddItemEvent = {
     item: {
-        _id: string
+        id: string
         text: string
         checked: boolean
         position: number
     }
-    version: number
-}
+} & SLEvent
 
 export type CheckItemEvent = {
     itemId: string
-    version: number
-}
+} & SLEvent
 
 export type DeleteItemEvent = {
     itemId: string
-    version: number
-}
+} & SLEvent
 
 export type EditItemEvent = {
     itemId: string
     text: string
-    version: number
-}
+} & SLEvent
 
 export type MoveItemEvent = {
     itemId: string
     position: number
-    version: number
-}
+} & SLEvent
 
 export type ClearCheckedEvent = {
-    version: number
-}
+} & SLEvent

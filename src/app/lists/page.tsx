@@ -7,7 +7,7 @@ import Spinner from '@/components/spinner';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import '@/app/globalicons.css'
 import Dialog from '@/components/dialog';
-import utils from '@/services/utils';
+import utils from '@/utils/validationUtils';
 
 
 export default function Lists() {

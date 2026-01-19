@@ -19,5 +19,6 @@ export async function POST(req: NextRequest, params: {params: {id: string}}) {
 }
 
 export type CheckItemRequestBody = {
-    itemID: string
+    itemID: string,
+    opId: string
 }

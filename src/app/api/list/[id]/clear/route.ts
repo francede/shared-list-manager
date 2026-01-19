@@ -9,10 +9,15 @@ export async function POST(req: NextRequest, params: {params: {id: string}}) {
     }
 
     let response;
+    const body = (await req.json()) as ClearCheckedRequestBody
 
-    await updateSharedListClearChecked(params.params.id).then(res => {
+    await updateSharedListClearChecked(params.params.id, body.opId).then(res => {
         response = NextResponse.json(res);
     });
 
     return response;
+}
+
+export type ClearCheckedRequestBody = {
+    opId: string
 }

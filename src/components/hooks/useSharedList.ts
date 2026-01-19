@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList } from "@/app/api/services/sharedListRepository";
+import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem } from "@/app/api/services/sharedListRepository";
 import { useChannel } from "ably/react";
 import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";
@@ -9,6 +9,9 @@ import { MoveItemRequestBody } from "@/app/api/list/[id]/move/route";
 import { CheckItemRequestBody } from "@/app/api/list/[id]/check/route";
 import { DeletItemRequestBody } from "@/app/api/list/[id]/delete/route";
 import { EditItemRequestBody } from "@/app/api/list/[id]/edit/route";
+import { randomUUID } from "crypto";
+import { ClearCheckedRequestBody } from "@/app/api/list/[id]/clear/route";
+import sharedListUtils from "@/utils/sharedListUtils";
 
 
 export function useSharedList(listId: string) {
@@ -16,6 +19,7 @@ export function useSharedList(listId: string) {
     const [list, setList] = useState<SharedList | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [pendingOperations, setPendingOperations] = useState<string[]>([])
 
     useChannel(`list:${listId}`, (message) => {
         handleMessage(message)
@@ -39,47 +43,103 @@ export function useSharedList(listId: string) {
 
         if(message.name === "ADD"){
             const data = message.data as AddItemEvent
-            list.items?.push 
-            list.version = data.version
+            const newItems = list.items?.filter(i => i.opId !== data.opId)
+            setPendingOperations(pendingOperations.filter(po => po !== data.opId))
+
+            newItems?.push({
+                _id: data.item.id,
+                text: data.item.text,
+                position: data.item.position,
+                checked: data.item.checked
+            })
+            
+            setList({
+                ...list,
+                version: data.version,
+                items: newItems
+            })
         }
 
         if(message.name === "CHECK"){
             const data = message.data as CheckItemEvent
-            const item = list.items?.find(e => e.id.toString() === data.itemId)
-            if (item){
-                item.checked = true
+
+            if(pendingOperations.includes(data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
+                return
             }
-            list.version = data.version
+
+            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, checked: true} : i)
+            setList({
+                ...list,
+                items: newItems,
+                version: data.version
+            })
         }
 
         if(message.name === "DELETE"){
             const data = message.data as DeleteItemEvent
-            list.items?.filter(e => e.id.toString() !== data.itemId)
-            list.version = data.version
+
+            if(pendingOperations.includes(data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
+                return
+            }
+
+            const newItems = list.items?.filter(i => i._id !== data.itemId)
+            setList({
+                ...list,
+                items: newItems,
+                version: data.version
+            })
         }
+        
 
         if(message.name === "MOVE"){
             const data = message.data as MoveItemEvent
-            const item = list.items?.find(e => e.id.toString() === data.itemId)
-            if(item){
-                item.position = data.position
+
+            if(pendingOperations.includes(data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
+                return
             }
-            list.version = data.version
+
+            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, position: data.position} : i)
+            setList({
+                ...list,
+                items: newItems,
+                version: data.version
+            })
         }
 
         if(message.name === "EDIT"){
             const data = message.data as EditItemEvent
-            const item = list.items?.find(e => e.id.toString() === data.itemId)
-            if(item){
-                item.text = data.text
+
+            if(pendingOperations.includes(data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
+                return
             }
-            list.version = data.version
+
+            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, text: data.text} : i)
+            setList({
+                ...list,
+                items: newItems,
+                version: data.version
+            })
         }
 
         if(message.name === "CLEAR"){
             const data = message.data as ClearCheckedEvent
-            list.items = list.items?.filter(e => e.checked === false)
-            list.version = data.version
+
+            if(pendingOperations.includes(data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
+                return
+            }
+
+            const newItems = list?.items?.filter(i => !i.checked)
+
+            setList({
+                ...list,
+                items: newItems,
+                version: data.version
+            })
         }
     }
 
@@ -96,83 +156,183 @@ export function useSharedList(listId: string) {
         }
     }
 
-  const addItem = useCallback(async (text: string) => {
-    const body: AddItemRequestBody = {
-        text
+    const addItem = useCallback(async (text: string) => {
+        const opId = getOpId()
+        const newItems = list?.items?.concat({
+            _id: "temp:"+opId,
+            text,
+            position: list.items.reduce((max, current) => Math.max(max, current.position), 0) + 100,
+            checked: false,
+            opId: opId
+        })
+
+        setList({
+            ...list,
+            items: newItems
+        })
+
+        setPendingOperations(pendingOperations.concat(opId))
+
+        const body: AddItemRequestBody = {
+            text,
+            opId
+        }
+        await fetch(`/api/list/${listId}/add`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" }
+        });
+    }, [listId]);
+
+    const moveItem = useCallback(async (itemId: string, itemIdBefore?: string, itemIdAfter?: string) => {
+        const itemAfter = list?.items?.find(e => e._id === itemIdAfter)
+        const itemBefore = list?.items?.find(e => e._id === itemIdBefore)
+
+        const newPosition = sharedListUtils.calculatePosition(itemBefore, itemAfter);
+        const opId = getOpId()
+        
+        const item = list?.items?.find(e => e._id === itemId)
+        if(!item || item.opId){
+            throw("Item not found or not persisted")
+        }
+
+        const newItems = list?.items?.map(i => i._id === itemId ? {...i, position: newPosition} : i)
+        setList({
+            ...list,
+            items: newItems
+        })
+
+        setPendingOperations(pendingOperations.concat(opId))
+
+        const body: MoveItemRequestBody = {
+            itemID: itemId,
+            itemIDBefore: itemIdBefore,
+            itemIDAfter: itemIdAfter,
+            opId
+        }
+        await fetch(`/api/list/${listId}/move`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" }
+        });
+    }, [listId]);
+
+    const checkItem = useCallback(async (itemId: string) => {
+        const opId = getOpId()
+        const item = list?.items?.find(e => e._id === itemId)
+        if(!item || item.opId){
+            throw("Item not found or not persisted")
+        }
+
+        const newItems = list?.items?.map(i => i._id === itemId ? {...i, checked: true} : i)
+        setList({
+            ...list,
+            items: newItems
+        })
+
+        setPendingOperations(pendingOperations.concat(opId))
+
+        const body: CheckItemRequestBody = {
+            itemID: itemId,
+            opId
+        }
+        await fetch(`/api/list/${listId}/check`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" }
+        });
+    }, [listId]);
+
+    const deleteItem = useCallback(async (itemId: string) => {
+        const opId = getOpId()
+        const item = list?.items?.find(e => e._id === itemId)
+        if(!item || item.opId){
+            throw("Item not found or not persisted")
+        }
+
+        const newItems = list?.items?.filter(i => i._id !== itemId)
+        setList({
+            ...list,
+            items: newItems
+        })
+
+        setPendingOperations(pendingOperations.concat(opId))
+
+        const body: DeletItemRequestBody = {
+            itemID: itemId,
+            opId
+        }
+        await fetch(`/api/list/${listId}/delete`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" }
+        });
+    }, [listId]);
+
+
+    const editItem = useCallback(async (itemId: string, text: string) => {
+        const opId = getOpId()
+        const item = list?.items?.find(e => e._id === itemId)
+        if(!item || item.opId){
+            throw("Item not found or not persisted")
+        }
+
+        const newItems = list?.items?.map(i => i._id === itemId ? {...i, text} : i)
+        setList({
+            ...list,
+            items: newItems
+        })
+
+        setPendingOperations(pendingOperations.concat(opId))
+
+        const body: EditItemRequestBody = {
+            itemID: itemId,
+            text,
+            opId
+        }
+        await fetch(`/api/list/${listId}/edit`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" }
+        });
+    }, [listId]);
+
+
+    const clearChecked = useCallback(async () => {
+        const opId = getOpId()
+
+        const newItems = list?.items?.filter(i => !i.checked)
+
+        setList({
+            ...list,
+            items: newItems
+        })
+
+        setPendingOperations(pendingOperations.concat(opId))
+
+        const body: ClearCheckedRequestBody = {
+            opId: getOpId()
+        }
+        await fetch(`/api/list/${listId}/clear`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" }
+        });
+    }, [listId]);
+
+    return {
+        list,
+        loading,
+        error,
+        addItem,
+        moveItem,
+        editItem,
+        deleteItem,
+        checkItem,
+        clearChecked
+    };
     }
-    await fetch(`/api/list/${listId}/add`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" }
-    });
-  }, [listId]);
 
-  const moveItem = useCallback(async (itemId: string, itemIdBefore?: string, itemIdAfter?: string) => {
-    const body: MoveItemRequestBody = {
-        itemID: itemId,
-        itemIDBefore: itemIdBefore,
-        itemIDAfter: itemIdAfter
-    }
-    await fetch(`/api/list/${listId}/move`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" }
-    });
-  }, [listId]);
-
-  const checkItem = useCallback(async (itemId: string) => {
-    const body: CheckItemRequestBody = {
-        itemID: itemId
-    }
-    await fetch(`/api/list/${listId}/check`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" }
-    });
-  }, [listId]);
-
-  const deleteItem = useCallback(async (itemId: string) => {
-    const body: DeletItemRequestBody = {
-        itemID: itemId
-    }
-    await fetch(`/api/list/${listId}/delete`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" }
-    });
-  }, [listId]);
-
-
-  const editItem = useCallback(async (itemId: string, text: string) => {
-    const body: EditItemRequestBody = {
-        itemID: itemId,
-        text
-    }
-    await fetch(`/api/list/${listId}/edit`, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" }
-    });
-  }, [listId]);
-
-
-  const clearChecked = useCallback(async () => {
-    await fetch(`/api/list/${listId}/clear`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    });
-  }, [listId]);
-
-
-  return {
-    list,
-    loading,
-    error,
-    addItem,
-    moveItem,
-    editItem,
-    deleteItem,
-    checkItem,
-    clearChecked
-  };
+function getOpId(): string{
+    return randomUUID();
 }

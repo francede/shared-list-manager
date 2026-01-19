@@ -8,7 +8,7 @@ import React from 'react';
 import Spinner from '@/components/spinner'
 import Dialog from '@/components/dialog'
 import { useRouter } from 'next/navigation'
-import utils from '@/services/utils'
+import utils from '@/utils/validationUtils'
 import { useSession } from 'next-auth/react'
 
 export default function Lists(props: Props){
@@ -26,30 +26,6 @@ export default function Lists(props: Props){
     const [newName, setNewName] = useState<string>('');
     const [newViewers, setNewViewers] = useState<string[]>([]);
     const [newViewerInput, setNewViewerInput] = useState<string>('');
-
-    useEffect(() => {
-        fetch("/api/list/" + props.params.id)
-        .then((res) => res.json()).catch((e) => {console.log("error", e)})
-        .then((data: SharedList) => {
-            setList(data);
-        }).catch((e) => {console.log("error", e)});
-    }, [props.params.id]);
-
-    useEffect(() => {
-        setSaved(false);
-        setSavingList(true);
-        fetch("/api/list/" + props.params.id, {
-            method: "PUT",
-            body: JSON.stringify(list)
-        })
-        .then((res) => res.json())
-        .then((data) => {
-            //TODO: change to check response
-            setSaved(true);
-            setSavingList(false);
-            setEditListDialogOpen(false);
-        });
-    }, [JSON.stringify(list)]);
 
     let saveMetaData = () => {
         setList({...list!, name: newName || list!.name, viewers: newViewers});
@@ -71,17 +47,6 @@ export default function Lists(props: Props){
         });
     }
 
-    let clearChecked = () => {
-        let elements = [...list!.elements!];
-        elements = elements.filter((e) => !e.checked);
-        if(elements.length === list?.elements?.length) return;
-
-        let newList = list;
-        list!.elements = elements;
-
-        setList(newList);
-    }
-
     let clickElement = (i: number) => {
         let elements = [...list!.elements!];
         if(elements[i].checked){
@@ -99,15 +64,6 @@ export default function Lists(props: Props){
         list!.elements = elements;
         setList(newList);
     };
-
-    let createElement = () => {
-        if(!input) return;
-        let elements = [...list!.elements!, {name: input, checked: false}]
-        let newList = list;
-        newList!.elements = elements;
-        setList(newList);
-        setInput('');
-    }
     
     let getElementClassName = (e: {name: string, checked: boolean}, i: number) => {
         const s = [styles["list-item"]];
