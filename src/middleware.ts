@@ -22,9 +22,10 @@ export async function middleware(request: NextRequest) {
     const email = await getUserEmail(request)
 
     const roles = await getUserRoles(listId, email, request);
-    if (roles.length === 0) return unauthenticated();
+    if (roles === null) return notFound();
 
     if (!roleSatisfies(roles, rule.requiredRole)) {
+        if (roles.length === 0) return unauthenticated();
         return forbidden();
     }
 
@@ -41,7 +42,7 @@ function extractListId(pathname: string): string | null {
   return match?.[1] ?? null;
 }
 
-async function getUserRoles(listId: string | null, email: string | null, request: NextRequest): Promise<Role[]>{
+async function getUserRoles(listId: string | null, email: string | null, request: NextRequest): Promise<Role[] | null>{
     if (!email){
         return []
     }
@@ -52,13 +53,15 @@ async function getUserRoles(listId: string | null, email: string | null, request
 
     const res = await fetch(`${request.nextUrl.origin}/api/list/${listId}/roles?listId=${listId}&email=${email}`);
 
+    if(res.status === 404) return null
+
     const body = await res.json() as RoleListResponse
 
     return body.roles
 }
 
-function roleSatisfies(roles: Role[], requiredRole: Role): boolean{
-    return roles.includes(requiredRole)
+function roleSatisfies(roles: Role[], requiredRole: Role | null): boolean{
+    return requiredRole === null || roles.includes(requiredRole) 
 }
 
 function unauthenticated(){
@@ -75,7 +78,7 @@ function notFound(msg?: string){
 
 async function getUserEmail(request: NextRequest): Promise<string | null>{
     if(process.env.NODE_ENV === "development"){
-        return request.headers.get("x-test-user-email")
+        return request.headers.get("x-test-user-email") ?? "anon@email.com"
     }
 
     const token = await getToken({req: request})

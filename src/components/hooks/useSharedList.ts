@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem } from "@/app/api/services/sharedListRepository";
+import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
 import { useChannel } from "ably/react";
 import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";
@@ -18,6 +18,7 @@ export function useSharedList(listId: string) {
 
     const [list, setList] = useState<SharedList | null>(null);
     const [loading, setLoading] = useState(true);
+    const [deletingList, setDeletingList] = useState(false)
     const [error, setError] = useState<string | null>(null);
     const [pendingOperations, setPendingOperations] = useState<string[]>([])
 
@@ -30,7 +31,7 @@ export function useSharedList(listId: string) {
         }
     }, [list])
 
-    const loadingItemIndexes = useMemo((): number[] => {
+    const loadingItemIds = useMemo((): number[] => {
         if(!list || pendingOperations.length === 0) return []
 
         const indexes: number[] = []
@@ -169,14 +170,36 @@ export function useSharedList(listId: string) {
 
     async function getList(){
         try {
-        setLoading(true);
-        const res = await fetch(`/api/list/${listId}`);
-        if (!res.ok) throw new Error("Failed to load list");
+            setLoading(true);
+            const res = await fetch(`/api/list/${listId}`);
+            if (!res.ok) throw new Error("Failed to load list");
 
-        const data = await res.json();
-        setList(data)
+            const data = await res.json();
+            setList(data)
         } catch (e) {
             setError("Failed to load list");
+        }
+    }
+
+    async function updateListMetadata(body: UpdateMetadataRequestBody, cb: () => void){
+        try {
+            setDeletingList(true);
+            const res = await fetch(new Request(`/api/list/${listId}`, {method: "PATCH", body: JSON.stringify(body)}));
+        if (!res.ok) throw new Error("Failed to update list");
+        cb() 
+        } catch (e) {
+            setError("Failed to update list");
+        }
+    }
+
+    async function deleteList(cb: () => void){
+        try {
+            setDeletingList(true);
+            const res = await fetch(new Request(`/api/list/${listId}`, {method: "DELETE"}));
+        if (!res.ok) throw new Error("Failed to delete list");
+        cb()
+        } catch (e) {
+            setError("Failed to delete list");
         }
     }
 
@@ -347,9 +370,12 @@ export function useSharedList(listId: string) {
 
     return {
         list: sortedList,
-        loadingItemIndexes,
+        loadingItemIds,
         loading,
+        deletingList,
         error,
+        deleteList,
+        updateListMetadata,
         addItem,
         moveItem,
         editItem,

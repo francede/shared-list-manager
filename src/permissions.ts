@@ -4,7 +4,7 @@ export type Method = "GET" | "POST" | "PATCH" | "DELETE"
 export type PermissionRule = {
   pattern: RegExp;
   methods: Method[];
-  requiredRole: Role;
+  requiredRole: Role | null;
 };
 
 export const PERMISSIONS: PermissionRule[] = [
@@ -29,17 +29,10 @@ export const PERMISSIONS: PermissionRule[] = [
     requiredRole: "editor"
   },
 
-  // Delete list
+  // Delete list / update metadata
   {
     pattern: /^\/api\/list\/[^/]+$/,
-    methods: ["DELETE"],
-    requiredRole: "owner"
-  },
-
-  // Edit metadata
-  {
-    pattern: /^\/api\/list\/[^/]+$/,
-    methods: ["PATCH"],
+    methods: ["DELETE", "PATCH"],
     requiredRole: "owner"
   },
 
@@ -48,5 +41,19 @@ export const PERMISSIONS: PermissionRule[] = [
     pattern: /^\/api\/auth\/token$/,
     methods: ["GET"],
     requiredRole: "authenticated"
+  },
+
+  // Next-auth
+  {
+    pattern: /^\/api\/auth\/(?!token).*$/,
+    methods: ["GET"],
+    requiredRole: "authenticated"
+  },
+
+  // Non-API
+  {
+    pattern: /^\/(?!api).*$/,
+    methods: ["GET"],
+    requiredRole: null
   }
 ];

@@ -6,8 +6,6 @@ export async function GET(req: NextRequest) {
     const listId = req.nextUrl.searchParams.get("listId");
     const email = req.nextUrl.searchParams.get("email");
 
-    console.log("GET ROLE LIST FOR %s - %s", listId, email)
-
     const roles: RoleListResponse = {roles: []}
 
     if (!email){
@@ -23,7 +21,7 @@ export async function GET(req: NextRequest) {
     const list = await getSharedList(listId);
 
     if (!list) {
-        return NextResponse.json(roles)
+        return NextResponse.json("List not found", {status: 404})
     }
 
     if (list.owner === email) roles.roles.push("owner");

@@ -60,6 +60,34 @@ export async function createSharedList(name: string, owner: string, viewers: str
     return await new sharedListModel(list).save();
 }
 
+export async function updateSharedListMetadata(listId: string, body: UpdateMetadataRequestBody){
+    await connect();
+
+    // TODO: Figure out how to check for typing
+    const updates: mongoose.AnyKeys<any> = {}
+
+    if(body.name){
+        updates["name"] = body.name
+    }
+
+    if(body.owner){
+        updates["owner"] = body.owner
+    }
+
+    if(body.viewers){
+        updates["viewers"] = body.viewers
+    }
+
+
+    await sharedListModel.updateOne(
+        {_id: listId},
+        {
+            $set: updates,
+        }
+    )
+    return true;
+}
+
 export async function deleteSharedList(id: string){
     await connect();
     return await sharedListModel.findByIdAndDelete(id).exec();
@@ -315,3 +343,9 @@ export type MoveItemEvent = {
 
 export type ClearCheckedEvent = {
 } & SLEvent
+
+export type UpdateMetadataRequestBody = {
+    name?: string,
+    owner?: string,
+    viewers?: string[]
+}

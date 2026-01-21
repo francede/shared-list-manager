@@ -1,6 +1,5 @@
 "use client"
 
-import { SharedList } from '@/app/api/services/sharedListRepository'
 import { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
 import '@/app/globalicons.css'
@@ -11,78 +10,77 @@ import { useRouter } from 'next/navigation'
 import utils from '@/utils/validationUtils'
 import { useSession } from 'next-auth/react'
 import { useSharedList } from '@/components/hooks/useSharedList'
+import { SharedListItem, UpdateMetadataRequestBody } from '@/app/api/services/sharedListRepository';
 
 export default function Lists(props: Props){
     const router = useRouter();
     const session = useSession();
-    const {} = useSharedList(props.params.id);
-    const [indexToDelete, setIndexToDelete] = useState<number | null>(null);
-    const [saved, setSaved] = useState<boolean>(true);
+    const {list, deleteItem, checkItem, deleteList, loadingItemIds, updateListMetadata, deletingList} = useSharedList(props.params.id);
+    const [itemIdToDelete, setItemIdToDelete] = useState<string | null>(null);
     const [input, setInput] = useState<string>('');
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
     const [editListDialogOpen, setEditListDialogOpen] = useState<boolean>(false);
     const [aboutToDelete, setAboutToDelete] = useState<boolean>(false);
-    const [deletingList, setDeletingList] = useState<boolean>(false);
-    const [savingList, setSavingList] = useState<boolean>(false);
-    const [newName, setNewName] = useState<string>('');
-    const [newViewers, setNewViewers] = useState<string[]>([]);
+    const [nameInput, setNameInput] = useState<string>('');
+    const [viewersInputList, setViewerInputList] = useState<string[] | null>(null);
     const [newViewerInput, setNewViewerInput] = useState<string>('');
 
     let saveMetaData = () => {
-        setList({...list!, name: newName || list!.name, viewers: newViewers});
+        const body: UpdateMetadataRequestBody = {};
+        if(nameInput) {
+            body.name = nameInput
+        }
+        if(viewersInputList !== null){
+            body.viewers = viewersInputList
+        }
+
+        updateListMetadata(body, () => {
+            router.replace('/lists');
+        })
     }
 
-    let deleteList = () => {
+    let deleteListWithConfirmation = () => {
         if(!aboutToDelete){
             setAboutToDelete(true);
             return;
         }
-        setDeletingList(true);
 
-        fetch("/api/list/" + props.params.id, {
-            method: "DELETE",
-        })
-        .then((res) => res.json())
-        .then(() => {
+        deleteList(() => {
             router.replace('/lists');
-        });
+        })
     }
 
-    let clickElement = (i: number) => {
-        let elements = [...list!.elements!];
-        if(elements[i].checked){
-            if(i === indexToDelete){
-                elements.splice(i, 1);
-                setIndexToDelete(null);
+    let clickElement = (item: SharedListItem) => {
+        if(item.checked){
+            if(item._id === itemIdToDelete){
+                deleteItem(item._id)
+                setItemIdToDelete(null);
             }else{
-                setIndexToDelete(i);
+                setItemIdToDelete(item._id);
                 return
             }
         }else{
-            elements[i].checked = true;
+            checkItem(item._id);
         }
-        let newList = list;
-        list!.elements = elements;
-        setList(newList);
     };
     
-    let getElementClassName = (e: {name: string, checked: boolean}, i: number) => {
+    let getElementClassName = (item: SharedListItem) => {
         const s = [styles["list-item"]];
-        if(e.checked) s.push(styles['checked']);
-        if(i === indexToDelete) s.push(styles['to-delete']);
+        if(item.checked) s.push(styles['checked']);
+        if(item._id === itemIdToDelete) s.push(styles['to-delete']);
         return s.join(" ")
     }
 
     let getSavedText = () => {
-        if(saved){
-            return (<div className={styles['list-saved']}><span>saved</span><span className="material-symbols-outlined">done</span></div>);
-        }
-        return <span>saving...</span>;
+        return (<div className={styles['list-saved']}>{loadingItemIds.length === 0 ? 
+            <span>"all changes saved"</span> : 
+            <span>"saving..."<span className="material-symbols-outlined">done</span></span>
+        }</div>);
     }
 
     let addNewViewer = () => {
-        if(!utils.isValidEmail(newViewerInput)) return;
-        setNewViewers([...newViewers, newViewerInput]);
+        if(!utils.isValidEmail(newViewerInput) || viewersInputList === null) return;
+        setViewerInputList([...viewersInputList, newViewerInput]);
         setNewViewerInput('');
     }
 
@@ -90,15 +88,12 @@ export default function Lists(props: Props){
         if(deletingList){
             return <div className={styles['spinner-container']}>Deleting &quot;{list?.name}&quot;<Spinner></Spinner></div>
         }
-        if(savingList){
-            return <div className={styles['spinner-container']}>Saving &quot;{list?.name}&quot;<Spinner></Spinner></div>
-        }
     }
 
     let openEditListDialog = () => {
         setEditListDialogOpen(true);
-        setNewName('');
-        setNewViewers(list?.viewers || []);
+        setNameInput('');
+        setViewerInputList(list?.viewers || []);
     }
 
     let closeEditListDialog = () => {
@@ -185,9 +180,6 @@ export default function Lists(props: Props){
             
         </div>
     )
-    
-
-    
 }
 
 interface Props{
