@@ -65,10 +65,10 @@ export async function updateSharedListAddItem(listID: string, opId: string, text
     if (!text) return false
 
     const result = await sharedListModel.aggregate([
-        { $match: { _id: new ObjectId(listID) } },
+        { $match: { _id: listID } },
         {
             $project: {
-                maxPosition: { $max: "$elements.position" }
+                maxPosition: { $max: "$items.position" }
             }
         }
     ]);
@@ -77,26 +77,27 @@ export async function updateSharedListAddItem(listID: string, opId: string, text
 
     const itemId = new ObjectId()
 
-    const element: SharedListItem = {
+    const item: SharedListItem = {
         _id: itemId.toString(),
         text: text,
         checked: false,
         position: maxPosition + 100
     }
 
-    await sharedListModel.updateOne(
+    const r = await sharedListModel.updateOne(
         {_id: listID},
         {
-            $push: {elements: element},
+            $push: {items: item},
             $inc: {version: 1}
         }
     )
+    
     const updated = await sharedListModel.findOne(
-        { _id: new ObjectId(listID) }
+        { _id: listID }
     );
 
     const event: AddItemEvent = {
-        item: {...element, id: itemId.toString()},
+        item: {...item, id: itemId.toString()},
         version: updated.version,
         opId
     }
@@ -110,14 +111,14 @@ export async function updateSharedListCheckItem(listID: string, opId: string, it
 
     if (!itemId) return false
     await sharedListModel.updateOne(
-        {_id: listID, "elements._id": new ObjectId(itemId)},
+        {_id: listID, "items._id": itemId},
         {
-            $set: { "elements.$.checked": true },
+            $set: { "items.$.checked": true },
             $inc: {version: 1}
         }
     )
     const updated = await sharedListModel.findOne(
-        { _id: new ObjectId(listID) },
+        { _id: listID },
     );
     
     const event: CheckItemEvent = {
@@ -135,14 +136,14 @@ export async function updateSharedListDeleteItem(listID: string, opId: string, i
 
     if (!itemId) return false
     await sharedListModel.updateOne(
-        {_id: new ObjectId(listID)},
+        {_id: listID},
         {
-            $pull: {elements: {_id: new ObjectId(itemId)}},
+            $pull: {items: {_id: itemId}},
             $inc: {version: 1}
         }
     )
     const updated = await sharedListModel.findOne(
-        { _id: new ObjectId(listID) }
+        { _id: listID }
     );
 
     const event: DeleteItemEvent = {
@@ -159,14 +160,14 @@ export async function updateSharedListClearChecked(listID: string, opId: string)
     await connect();
 
     await sharedListModel.updateOne(
-        {_id: new ObjectId(listID)},
+        {_id: listID},
         {
-            $pull: {elements: {checked: true}},
+            $pull: {items: {checked: true}},
             $inc: {version: 1}
         }
     )
     const updated = await sharedListModel.findOne(
-        { _id: new ObjectId(listID) }
+        { _id: listID }
     );
 
     const event: ClearCheckedEvent = {
@@ -183,16 +184,16 @@ export async function updateSharedListEditItem(listID: string, opId: string, ite
 
     if (!text || !itemId) return false
     await sharedListModel.updateOne(
-        {_id: new ObjectId(listID), "elements._id": new ObjectId(itemId)},
+        {_id: listID, "items._id": itemId},
         {
             $set: { 
-                "elements.$.name": text,
+                "items.$.name": text,
             },
             $inc: {version: 1}
         }
     )
     const updated = await sharedListModel.findOne(
-        { _id: new ObjectId(listID) }
+        { _id: listID }
     );
 
     const event: EditItemEvent = {
@@ -212,30 +213,30 @@ export async function updateSharedListMoveItem(listID: string, opId: string, ite
 
     if (!itemId || (!itemIdBefore && !itemIdAfter)) return false
 
-    const elementBefore = (await sharedListModel.findOne(
-        {_id: new ObjectId(listID), "elements._id": new ObjectId(itemIdBefore)},
-        {"elements.$": 1}
-    ))?.elements[0];
+    const itemBefore = (await sharedListModel.findOne(
+        {_id: listID, "items._id": itemIdBefore},
+        {"items.$": 1}
+    ))?.items[0];
 
-    const elementAfter = (await sharedListModel.findOne(
-        {_id: new ObjectId(listID), "elements._id": new ObjectId(itemIdAfter)},
-        {"elements.$": 1}
-    ))?.elements[0];
+    const itemAfter = (await sharedListModel.findOne(
+        {_id: listID, "items._id": itemIdAfter},
+        {"items.$": 1}
+    ))?.items[0];
 
-    const newPosition = sharedListUtils.calculatePosition(elementBefore, elementAfter);
+    const newPosition = sharedListUtils.calculatePosition(itemBefore, itemAfter);
 
     await sharedListModel.updateOne(
-        {_id: new ObjectId(listID), "elements._id": new ObjectId(itemId)},
+        {_id: listID, "items._id": itemId},
         {
             $set: { 
-                "elements.$.position": newPosition,
+                "items.$.position": newPosition,
             },
             $inc: {version: 1}
         }
     )
 
     const updated = await sharedListModel.findOne(
-        { _id: new ObjectId(listID) }
+        { _id: listID }
     );
 
     const event: MoveItemEvent = {

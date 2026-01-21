@@ -10,11 +10,12 @@ import Dialog from '@/components/dialog'
 import { useRouter } from 'next/navigation'
 import utils from '@/utils/validationUtils'
 import { useSession } from 'next-auth/react'
+import { useSharedList } from '@/components/hooks/useSharedList'
 
 export default function Lists(props: Props){
     const router = useRouter();
     const session = useSession();
-    const [list, setList] = useState<(SharedList) | null>(null);
+    const {} = useSharedList(props.params.id);
     const [indexToDelete, setIndexToDelete] = useState<number | null>(null);
     const [saved, setSaved] = useState<boolean>(true);
     const [input, setInput] = useState<string>('');
