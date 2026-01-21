@@ -19,15 +19,30 @@ export function useSharedList(listId: string) {
     const [list, setList] = useState<SharedList | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [pendingOperations, setPendingOperations] = useState<{opId: string, position?: number}[]>([])
+    const [pendingOperations, setPendingOperations] = useState<string[]>([])
 
-    const sortedList = useMemo(() => {
+    const sortedList = useMemo((): SharedList | null => {
         if(!list) return list
 
         return {
             ...list,
             items: list.items?.toSorted((a,b) => a.position - b.position)
         }
+    }, [list])
+
+    const loadingItemIndexes = useMemo((): number[] => {
+        if(!list || pendingOperations.length === 0) return []
+
+        const indexes: number[] = []
+
+        pendingOperations.forEach(po => {
+            const index = sortedList?.items?.findIndex(item => item.opId === po)
+            if (index !== undefined && !indexes.includes(index)){
+                indexes.push(index)
+            }
+        })
+
+        return indexes
     }, [list])
 
     useChannel(`list:${listId}`, (message) => {
@@ -53,7 +68,7 @@ export function useSharedList(listId: string) {
         if(message.name === "ADD"){
             const data = message.data as AddItemEvent
             const newItems = list.items?.filter(i => i.opId !== data.opId)
-            setPendingOperations(pendingOperations.filter(po => po.opId !== data.opId))
+            setPendingOperations(pendingOperations.filter(po => po !== data.opId))
 
             newItems?.push({
                 _id: data.item.id,
@@ -72,8 +87,8 @@ export function useSharedList(listId: string) {
         if(message.name === "CHECK"){
             const data = message.data as CheckItemEvent
 
-            if(pendingOperations.find(po => po.opId === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po.opId !== data.opId))
+            if(pendingOperations.find(po => po === data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
                 return
             }
 
@@ -88,8 +103,8 @@ export function useSharedList(listId: string) {
         if(message.name === "DELETE"){
             const data = message.data as DeleteItemEvent
 
-            if(pendingOperations.find(po => po.opId === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po.opId !== data.opId))
+            if(pendingOperations.find(po => po === data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
                 return
             }
 
@@ -105,8 +120,8 @@ export function useSharedList(listId: string) {
         if(message.name === "MOVE"){
             const data = message.data as MoveItemEvent
 
-            if(pendingOperations.find(po => po.opId === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po.opId !== data.opId))
+            if(pendingOperations.find(po => po === data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
                 return
             }
 
@@ -121,8 +136,8 @@ export function useSharedList(listId: string) {
         if(message.name === "EDIT"){
             const data = message.data as EditItemEvent
 
-            if(pendingOperations.find(po => po.opId === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po.opId !== data.opId))
+            if(pendingOperations.find(po => po === data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
                 return
             }
 
@@ -137,8 +152,8 @@ export function useSharedList(listId: string) {
         if(message.name === "CLEAR"){
             const data = message.data as ClearCheckedEvent
 
-            if(pendingOperations.find(po => po.opId === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po.opId !== data.opId))
+            if(pendingOperations.find(po => po === data.opId)){
+                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
                 return
             }
 
@@ -181,7 +196,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat({opId, position: itemPosition}))
+        setPendingOperations(pendingOperations.concat(opId))
 
         const body: AddItemRequestBody = {
             text,
@@ -212,7 +227,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat({opId, position: newPosition}))
+        setPendingOperations(pendingOperations.concat(opId))
 
         const body: MoveItemRequestBody = {
             itemId: itemId,
@@ -240,7 +255,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat({opId, position: item.position}))
+        setPendingOperations(pendingOperations.concat(opId))
 
         const body: CheckItemRequestBody = {
             itemId: itemId,
@@ -266,7 +281,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat({opId, position: item.position}))
+        setPendingOperations(pendingOperations.concat(opId))
 
         const body: DeleteItemRequestBody = {
             itemId: itemId,
@@ -293,7 +308,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat({opId, position: item.position}))
+        setPendingOperations(pendingOperations.concat(opId))
 
         const body: EditItemRequestBody = {
             itemId: itemId,
@@ -318,7 +333,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat({opId}))
+        setPendingOperations(pendingOperations.concat(opId))
 
         const body: ClearCheckedRequestBody = {
             opId: getOpId()
@@ -332,6 +347,7 @@ export function useSharedList(listId: string) {
 
     return {
         list: sortedList,
+        loadingItemIndexes,
         loading,
         error,
         addItem,
