@@ -9,16 +9,16 @@ export async function POST(req: NextRequest, params: {params: {id: string}}) {
     }
 
     let response;
-    const body = (await req.json()) as DeletItemRequestBody
+    const body = (await req.json()) as DeleteItemRequestBody
 
-    await updateSharedListDeleteItem(params.params.id, body.itemID, body.opId).then(res => {
+    await updateSharedListDeleteItem(params.params.id, body).then(res => {
         response = NextResponse.json(res);
     });
 
     return response;
 }
 
-export type DeletItemRequestBody = {
-    itemID: string
+export type DeleteItemRequestBody = {
+    itemId: string
     opId: string
 }

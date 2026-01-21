@@ -11,7 +11,7 @@ export async function POST(req: NextRequest, params: {params: {id: string}}) {
     let response;
     const body = (await req.json()) as CheckItemRequestBody
 
-    await updateSharedListCheckItem(params.params.id, body.itemID).then(res => {
+    await updateSharedListCheckItem(params.params.id, body).then(res => {
         response = NextResponse.json(res);
     });
 
@@ -19,6 +19,6 @@ export async function POST(req: NextRequest, params: {params: {id: string}}) {
 }
 
 export type CheckItemRequestBody = {
-    itemID: string,
+    itemId: string,
     opId: string
 }
