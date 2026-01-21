@@ -7,7 +7,7 @@ import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";
 import { MoveItemRequestBody } from "@/app/api/list/[id]/move/route";
 import { CheckItemRequestBody } from "@/app/api/list/[id]/check/route";
-import { DeletItemRequestBody } from "@/app/api/list/[id]/delete/route";
+import { DeleteItemRequestBody } from "@/app/api/list/[id]/delete/route";
 import { EditItemRequestBody } from "@/app/api/list/[id]/edit/route";
 import { randomUUID } from "crypto";
 import { ClearCheckedRequestBody } from "@/app/api/list/[id]/clear/route";
@@ -215,9 +215,9 @@ export function useSharedList(listId: string) {
         setPendingOperations(pendingOperations.concat({opId, position: newPosition}))
 
         const body: MoveItemRequestBody = {
-            itemID: itemId,
-            itemIDBefore: itemIdBefore,
-            itemIDAfter: itemIdAfter,
+            itemId: itemId,
+            itemIdBefore: itemIdBefore,
+            itemIdAfter: itemIdAfter,
             opId
         }
         await fetch(`/api/list/${listId}/move`, {
@@ -243,7 +243,7 @@ export function useSharedList(listId: string) {
         setPendingOperations(pendingOperations.concat({opId, position: item.position}))
 
         const body: CheckItemRequestBody = {
-            itemID: itemId,
+            itemId: itemId,
             opId
         }
         await fetch(`/api/list/${listId}/check`, {
@@ -268,8 +268,8 @@ export function useSharedList(listId: string) {
 
         setPendingOperations(pendingOperations.concat({opId, position: item.position}))
 
-        const body: DeletItemRequestBody = {
-            itemID: itemId,
+        const body: DeleteItemRequestBody = {
+            itemId: itemId,
             opId
         }
         await fetch(`/api/list/${listId}/delete`, {
@@ -296,7 +296,7 @@ export function useSharedList(listId: string) {
         setPendingOperations(pendingOperations.concat({opId, position: item.position}))
 
         const body: EditItemRequestBody = {
-            itemID: itemId,
+            itemId: itemId,
             text,
             opId
         }
