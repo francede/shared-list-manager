@@ -41,6 +41,8 @@
 
 .checkmark.invisible{
     opacity: 0%;
+    transition-delay: 0s;
+    transition-duration: 0.25s;
 }
 
 .checkmark-container{

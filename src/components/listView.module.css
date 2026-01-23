@@ -1,0 +1,103 @@
+.list-container{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}  
+
+.list-item{
+    background-color: #eee;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #aaa;
+    transition: background-color 0.5s;
+    position: relative;
+}
+
+.list-item:hover{
+    background-color: #ddd;
+    cursor: pointer;
+}
+
+.checked{
+    background-color: #ddd;
+}
+
+.checked > .item-text{
+    position: relative;
+    width: fit-content;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.checked > .item-text::after{
+    background-color: black;
+    position: absolute;
+    content: '';
+    top: 40%;
+    left: 0;
+    height: 2px;
+    animation-name: strikethrough;
+    animation-duration: 0.5s;
+    animation-fill-mode: both;
+}
+    
+.highlight{
+    color: red;
+}
+.highlight > div::after{
+    background-color: red;
+}
+
+@keyframes strikethrough {
+    from{
+        width: 0%;
+    }
+    to{
+        width: 100%;
+    }
+}
+
+.context-menu-container{
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    transition: 0.2s;
+}
+
+.context-menu-container.closed{
+    opacity: 0%;
+    transform: scaleX(50%) scaleY(50%) translateX(-100%);
+    pointer-events: none;
+}
+
+.context-menu{
+    display: flex;
+    flex-direction: row;
+    border: 1px solid #aaa;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: #fff;
+}
+
+.context-menu > button{
+    padding: 8px 10px;
+    border-radius: 0px;
+    background-color: transparent;
+    position: relative;
+    color: #444;
+}
+
+.context-menu > button:hover{
+    background-color: #ddd;
+}
+
+.context-menu > button:not(:nth-child(1))::before{
+    content: "";
+    position: absolute;
+    left: -0.5px;
+    width: 1px;
+    height: 75%;
+    background-color: #aaa;
+}

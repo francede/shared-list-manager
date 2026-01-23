@@ -5,6 +5,8 @@ import { getServerSession } from 'next-auth'
 import { OPTIONS } from './api/auth/[...nextauth]/route'
 import SharedListSessionProvider from '@/components/providers/SharedListSessionProvider'
 import { AblyClientProvider } from '@/components/providers/AblyClientProvider'
+import styles from './layout.module.css'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
@@ -16,14 +18,15 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-
   const session = await getServerSession(OPTIONS)
+
+
   return (
-    <html lang="en">
+    <html lang="en" className={styles["root-html"]}>
       <body className={inter.className}>
         <SharedListSessionProvider session={session}>
           <AblyClientProvider>
-            <div>
+            <div className={styles['layout']}>
               {children}
             </div>
           </AblyClientProvider>

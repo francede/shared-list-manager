@@ -1,8 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs';
-
-import { fn } from 'storybook/test';
 import ItemSpinner from './itemSpinner';
-
 
 const meta = {
   title: 'ItemSpinner',
@@ -10,7 +7,6 @@ const meta = {
   parameters: {
     layout: 'centered',
   },
-  // More on argTypes: https://storybook.js.org/docs/api/argtypes
   argTypes: {
     spinningState: { control: "radio", options: ["spinning", "done", "gone"] },
   },
@@ -19,7 +15,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Spinner: Story = {
+export const itemSpinner: Story = {
   args: {
     spinningState: "spinning",
   },
