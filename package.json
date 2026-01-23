@@ -6,25 +6,35 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "ably": "^2.16.0",
     "mongodb": "6.3",
     "mongoose": "^8.0.3",
-    "next": "14.0.4",
+    "next": "^14.2.35",
     "next-auth": "^4.24.5",
-    "react": "^18",
-    "react-dom": "^18",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "sass": "^1.69.5"
   },
   "devDependencies": {
+    "@storybook/addon-a11y": "^10.2.0",
+    "@storybook/addon-docs": "^10.2.0",
+    "@storybook/addon-onboarding": "^10.2.0",
+    "@storybook/nextjs": "^10.2.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitest/mocker": "^4.0.18",
     "autoprefixer": "^10.0.1",
     "eslint": "^8",
     "eslint-config-next": "14.0.4",
-    "typescript": "^5"
+    "eslint-plugin-storybook": "^10.2.0",
+    "storybook": "^10.2.0",
+    "typescript": "^5",
+    "vitest": "^4.0.18"
   }
 }

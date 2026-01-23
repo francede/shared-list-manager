@@ -4,12 +4,6 @@ import styles from './itemSpinner.module.css'
 import React, { useState } from 'react';
 
 export default function ItemSpinner(props: ItemSpinnerProps){
-    const [spinningState, setSpinningState] = useState<"spinning" | "done" | "gone">(props.spinningState)
-
-    const handleClick = () => {
-        setSpinningState(spinningState==="spinning" ? "done" : (spinningState==="done" ? "gone" : "spinning"))
-        console.log(spinningState)
-    }
 
     const getContainerStyles = () => {
         const s = [styles["container"]];
@@ -18,18 +12,18 @@ export default function ItemSpinner(props: ItemSpinnerProps){
 
     const getSpinnerStyles = () => {
         const s = [styles["spinner"]];
-        if(spinningState === "done" || spinningState === "gone") s.push(styles['invisible']);
+        if(props.spinningState === "done" || props.spinningState === "gone") s.push(styles['invisible']);
         return s.join(" ")
     }
 
     const getCheckmarkStyles = () => {
         const s = [styles["checkmark"], "material-symbols-outlined"]
-        if(spinningState === "spinning" || spinningState === "gone") s.push(styles['invisible']);
+        if(props.spinningState === "spinning" || props.spinningState === "gone") s.push(styles['invisible']);
         return s.join(" ")
     }
 
     return (
-        <div className={getContainerStyles()} onClick={() => {handleClick()}}>
+        <div className={getContainerStyles()}>
             <div className={getSpinnerStyles()}>
                 <div></div>
             </div>
