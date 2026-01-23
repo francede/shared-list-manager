@@ -74,7 +74,7 @@ export default function Lists(props: Props){
     let getSavedText = () => {
         return (<div className={styles['list-saved']}>{loadingItemIds.length === 0 ? 
             <span>"all changes saved"</span> : 
-            <span>"saving..."<span className="material-symbols-outlined">done</span></span>
+            <span>"saving..."<span className="material-symbols-outlined">check</span></span>
         }</div>);
     }
 
