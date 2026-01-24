@@ -49,6 +49,12 @@
     background-color: red;
 }
 
+.drag-divider{
+    height: 2px;
+    width: 100%;
+    background-color: #00BFFF;
+}
+
 @keyframes strikethrough {
     from{
         width: 0%;

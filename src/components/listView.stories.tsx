@@ -12,7 +12,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const NonDraggable: Story = {
+export const listView: Story = {
     args: {
         list: [{
             id: "1001",
@@ -36,9 +36,12 @@ export const NonDraggable: Story = {
             checked: true,
             highlight: true
         }],
-        onClick: (itemId: string) => {},
+        onClick: (itemId: string) => {alert(itemId + " clicked")},
         onDelete: (itemId: string) => {},
         onEdit: (itemId: string) => {},
         onUndo: (itemId: string) => {},
+        onDrag: (itemId, newIndex) => {
+            alert(itemId + " i: " + newIndex)
+        },
     }
 };
