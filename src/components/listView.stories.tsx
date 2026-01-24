@@ -23,7 +23,6 @@ export const listView: Story = {
             id: "1002",
             text: "Test 2",
             checked: false,
-            highlight: true
         },
         {
             id: "1003",
@@ -34,7 +33,6 @@ export const listView: Story = {
             id: "1004",
             text: "Test 4",
             checked: true,
-            highlight: true
         }],
         onClick: (itemId: string) => {
             console.log(itemId + " clicked")

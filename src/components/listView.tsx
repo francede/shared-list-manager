@@ -21,8 +21,9 @@ export default function ListView(props: ListViewProps){
     const touchStartPositionRef = useRef<{x: number, y:number, itemIndex: number} | null>(null)
 
     /* DRAG CONTROLS */
-    const startDrag = (index: number) => {
+    const startDrag = (index: number, startX: number, startY: number) => {
         setDraggedIndex(index);
+        setDragPosition({x: startX, y: startY})
         draggedIndexRef.current = index
         dragTimeoutRef.current = null
         dragOccurredRef.current = true
@@ -139,7 +140,7 @@ export default function ListView(props: ListViewProps){
             const dy = e.clientY - touchStartPositionRef.current.y
             const distance = Math.hypot(dx, dy);
             if(distance > DRAG_TOLERANCE){
-                startDrag(touchStartPositionRef.current.itemIndex);
+                startDrag(touchStartPositionRef.current.itemIndex, e.clientX, e.clientY);
                 closeContextMenu();
             }
         }
@@ -151,8 +152,8 @@ export default function ListView(props: ListViewProps){
         e.currentTarget.setPointerCapture(e.pointerId)
         if(e.pointerType === "mouse"){
             dragTimeoutRef.current = window.setTimeout(() => {
-                startDrag(index)
-            }, 250);
+                startDrag(index, e.clientX, e.clientY)
+            }, 100);
         }else{
             touchStartPositionRef.current = {
                 x: e.clientX,
