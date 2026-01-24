@@ -6,6 +6,8 @@ import styles from './listView.module.css'
 
 export default function ListView(props: ListViewProps){
     const [contextMenuIndex, setContextMenuIndex] = useState<number | null>(null);
+    const [editIndex, setEditIndex] = useState<number | null>(null);
+    const [editInput, setEditInput] = useState<string>("");
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [dragPosition, setDragPosition] = useState<{x: number, y:number}>({x:0,y:0})
     const draggedIndexRef = useRef<number | null>(null);
@@ -29,6 +31,7 @@ export default function ListView(props: ListViewProps){
         }
     }, [draggedIndex])
 
+    /* DRAG CONTROLS */
     const startDrag = (index: number) => {
         dragTimeoutRef.current = window.setTimeout(() => {
             setDraggedIndex(index);
@@ -86,7 +89,8 @@ export default function ListView(props: ListViewProps){
             insertionIndexRef.current = itemRefs.current.length;
         }
     }
- 
+
+    /* CONTEXT MENU CONTROLS */
     const closeContextMenu = () => {
         setContextMenuIndex(null)
     }
@@ -96,35 +100,45 @@ export default function ListView(props: ListViewProps){
         setContextMenuIndex(index);
     }
 
-    const getContextButtons = (item: ListViewItem) => {
+    const getContextButtons = (item: ListViewItem, index: number) => {
         const contextButtons: ListViewContextMenuButton[] = []
         if(props.onEdit){
             contextButtons.push({icon: "edit", onClick: () => {
-                alert(`edit id:${item.id} = ${item.text}`)
+                setEditIndex(index);
+                setEditInput(item.text)
             }})
         }
 
         if(props.onDelete){
             contextButtons.push({icon: "delete", onClick: () => {
-                alert(`delete id:${item.id} = ${item.text}`)
+                props.onDelete && props.onDelete(item.id)
             }})
         }
 
         if(props.onUndo){
             contextButtons.push({icon: "undo", onClick: () => {
-                alert(`undo id:${item.id} = ${item.text}`)
+                props.onUndo && props.onUndo(item.id)
             }})
         }
         
         return contextButtons
     }
 
+    /* EDIT CONTROLS */
+    const saveEdit = () => {
+        if(editIndex === null || !props.onEdit) return
+        props.onEdit(props.list[editIndex].id, editInput);
+        setEditIndex(null);
+        setEditInput("");
+    }
+
+    /* INPUT EVENTS */
     const handleMouseMove = (e: MouseEvent) => {
         updateDrag(e.clientX, e.clientY);
     }
 
     const handleMouseDown = (e: React.MouseEvent, index: number) => {
-        if(!props.onDrag || e.button !== 0) return
+        if(!props.onDrag || e.button !== 0 || editIndex) return
         e.preventDefault()
         startDrag(index)
     }
@@ -137,13 +151,23 @@ export default function ListView(props: ListViewProps){
     const handleClick = (itemId: string) => {
         if(dragOccurredRef.current) return
         endDrag();
+        if(editIndex) return
         props.onClick(itemId)
     }
 
-    const getItemClassName = (item: ListViewItem) => {
+    /* CSS CLASS NAMES AND STYLES*/
+    const getItemClassName = (item: ListViewItem, index: number) => {
+        if(editIndex === index){
+            return getEditedClassName()
+        }
         const s = [styles["list-item"]];
         if(item.checked) s.push(styles['checked']);
         if(item.highlight) s.push(styles['highlight']);
+        return s.join(" ")
+    }
+
+    const getEditedClassName = () => {
+        const s = [styles["list-item"], styles["edited"]];
         return s.join(" ")
     }
 
@@ -184,14 +208,21 @@ export default function ListView(props: ListViewProps){
                     <div key={"placeholder"} ref={e => {itemRefs.current[i] = e}} className={getDragPlaceholderClassName()} onClick={() => props.onClick(item.id)} onContextMenu={(e) => {handleContextMenu(e, i)}}>
                         <div className={styles['item-text']}>{item.text}</div>
                     </div>
-                    <div key={i} className={getItemClassName(item)} style={getDraggedItemStyles()} onMouseDown={(e) => {handleMouseDown(e,i)}}>
+                    <div key={i} className={getItemClassName(item, i)} style={getDraggedItemStyles()} onMouseDown={(e) => {handleMouseDown(e,i)}}>
                         <div className={styles['item-text']}>{item.text}</div>
                     </div>
                     </>)
                 : 
-                    <div key={i} ref={e => {itemRefs.current[i] = e}} className={getItemClassName(item)} onClick={() => handleClick(item.id)} onMouseDown={(e) => {handleMouseDown(e,i)}} onContextMenu={(e) => {handleContextMenu(e, i)}}>
-                        <div className={styles['item-text']}>{item.text}</div>
-                        <ListViewContextMenu className={getContextMenuClassName(i)} contextButtons={getContextButtons(item)} onOutsideClick={() => {contextMenuIndex === i ? closeContextMenu() : null}}></ListViewContextMenu>
+                    <div key={i} ref={e => {itemRefs.current[i] = e}} className={getItemClassName(item,i)} onClick={() => handleClick(item.id)} onMouseDown={(e) => {handleMouseDown(e,i)}} onContextMenu={(e) => {handleContextMenu(e, i)}}>
+                        {editIndex === i ? 
+                            <>
+                                <input value={editInput}></input>
+                                <button className="material-symbols-outlined" onClick={() => saveEdit()}>save</button>
+                            </>
+                        :
+                            <div className={styles['item-text']}>{item.text}</div>
+                        }
+                        <ListViewContextMenu className={getContextMenuClassName(i)} contextButtons={getContextButtons(item, i)} onOutsideClick={() => {contextMenuIndex === i ? closeContextMenu() : null}}></ListViewContextMenu>
                     </div>
                 }
                 </>
@@ -236,7 +267,6 @@ export function ListViewContextMenu(props: ListViewContextMenuProps){
 
     useEffect(() => {
         document.addEventListener('mousedown', handleClickOutside)
-
         return () => {document.removeEventListener('mousedown', handleClickOutside);}
     }, [props.onOutsideClick])
 
@@ -246,10 +276,17 @@ export function ListViewContextMenu(props: ListViewContextMenuProps){
         return s.join(" ")
     }
 
+    const handleClick = (e: React.MouseEvent, button: ListViewContextMenuButton) => {
+        e.preventDefault();
+        e.stopPropagation()
+        button.onClick();
+        props.onOutsideClick()
+    }
+
     return (
         <div className={getContextMenuClassNames()} ref={menuRef}>
             {props.contextButtons?.map((button, i) => 
-                <button key={i} onClick={() => {button.onClick()}}>
+                <button key={i} onClick={(e) => {handleClick(e, button)}} onMouseDown={e => e.stopPropagation()}>
                     <div className="material-symbols-outlined">{button.icon}</div>
                 </button>
             )}
