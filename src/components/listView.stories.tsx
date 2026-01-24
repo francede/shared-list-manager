@@ -36,12 +36,20 @@ export const listView: Story = {
             checked: true,
             highlight: true
         }],
-        onClick: (itemId: string) => {alert(itemId + " clicked")},
-        onDelete: (itemId: string) => {},
-        onEdit: (itemId: string) => {},
-        onUndo: (itemId: string) => {},
+        onClick: (itemId: string) => {
+            console.log(itemId + " clicked")
+        },
+        onDelete: (itemId: string) => {
+            console.log(itemId + " deleted")
+        },
+        onEdit: (itemId: string, text: string) => {
+            console.log(itemId + " edited to " + text)
+        },
+        onUndo: (itemId: string) => {
+            console.log(itemId + " undone")
+        },
         onDrag: (itemId, newIndex) => {
-            alert(itemId + " i: " + newIndex)
+            console.log(itemId + " dragged to i: " + newIndex)
         },
     }
 };
