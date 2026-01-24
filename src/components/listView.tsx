@@ -29,11 +29,69 @@ export default function ListView(props: ListViewProps){
         }
     }, [draggedIndex])
 
+    const startDrag = (index: number) => {
+        dragTimeoutRef.current = window.setTimeout(() => {
+            setDraggedIndex(index);
+            draggedIndexRef.current = index
+            dragTimeoutRef.current = null
+            dragOccurredRef.current = true
+        }, 250);
+    }
+
+    const endDrag = () => {
+        if(!props.onDrag) return
+        if (dragTimeoutRef.current) {
+            clearTimeout(dragTimeoutRef.current);
+            dragTimeoutRef.current = null;
+        }
+
+        if(draggedIndexRef.current !== null && insertionIndexRef.current !== null){
+            
+            props.onDrag(props.list[draggedIndexRef.current].id, insertionIndexRef.current)
+        }
+
+        setDraggedIndex(null)
+        draggedIndexRef.current = null
+
+        setTimeout(() => { //Wait for click event to fire
+            dragOccurredRef.current = false;
+        }, 0);
+    }
+
+    const updateDrag = (newX: number, newY: number) => {
+        if(!props.onDrag) return
+        if(draggedIndexRef.current === null) return
+
+        setDragPosition({x: newX, y: newY})
+
+        for(let i = 0; i < itemRefs.current.length; i++){
+            const rect = itemRefs.current[i]?.getBoundingClientRect();
+            if(!rect) continue
+            const midY = rect?.top + rect?.height / 2
+            if (newY < midY){
+
+                if (i === draggedIndexRef.current || i === draggedIndexRef.current! + 1) {
+                    setInsertionIndex(null);
+                    insertionIndexRef.current = null;
+                    return;
+                }
+                setInsertionIndex(i)
+                insertionIndexRef.current = i;
+                return
+            }
+        }
+
+        if (draggedIndexRef.current !== itemRefs.current.length - 1) {
+            setInsertionIndex(itemRefs.current.length);
+            insertionIndexRef.current = itemRefs.current.length;
+        }
+    }
+ 
     const closeContextMenu = () => {
         setContextMenuIndex(null)
     }
 
-    const openContextMenu = (event: React.MouseEvent, index: number) => {
+    const handleContextMenu = (event: React.MouseEvent, index: number) => {
         event.preventDefault()
         setContextMenuIndex(index);
     }
@@ -62,72 +120,23 @@ export default function ListView(props: ListViewProps){
     }
 
     const handleMouseMove = (e: MouseEvent) => {
-        if(!props.onDrag) return
-        if(draggedIndexRef.current === null) return
-
-        setDragPosition({x: e.clientX, y: e.clientY})
-
-        for(let i = 0; i < itemRefs.current.length; i++){
-            const rect = itemRefs.current[i]?.getBoundingClientRect();
-            if(!rect) continue
-            const midY = rect?.top + rect?.height / 2
-            if (e.clientY < midY){
-
-                if (i === draggedIndexRef.current || i === draggedIndexRef.current! + 1) {
-                    setInsertionIndex(null);
-                    insertionIndexRef.current = null;
-                    return;
-                }
-                setInsertionIndex(i)
-                insertionIndexRef.current = i;
-                return
-            }
-        }
-
-        if (draggedIndexRef.current !== itemRefs.current.length - 1) {
-            setInsertionIndex(itemRefs.current.length);
-            insertionIndexRef.current = itemRefs.current.length;
-        }
+        updateDrag(e.clientX, e.clientY);
     }
 
     const handleMouseDown = (e: React.MouseEvent, index: number) => {
-        if(!props.onDrag) return
+        if(!props.onDrag || e.button !== 0) return
         e.preventDefault()
-        dragTimeoutRef.current = window.setTimeout(() => {
-            setDraggedIndex(index);
-            draggedIndexRef.current = index
-            dragTimeoutRef.current = null
-            dragOccurredRef.current = true
-        }, 250);
+        startDrag(index)
     }
 
     const handleMouseUp = (e: MouseEvent) => {
-        if(!props.onDrag) return
         e.preventDefault()
-        if (dragTimeoutRef.current) {
-            clearTimeout(dragTimeoutRef.current);
-            dragTimeoutRef.current = null;
-        }
-
-        if(draggedIndexRef.current !== null && insertionIndexRef.current !== null){
-            
-            props.onDrag(props.list[draggedIndexRef.current].id, insertionIndexRef.current)
-        }
-
-        setDraggedIndex(null)
-        draggedIndexRef.current = null
-
-        setTimeout(() => { //Wait for click event to fire
-            dragOccurredRef.current = false;
-        }, 0);
+        endDrag();
     }
 
     const handleClick = (itemId: string) => {
         if(dragOccurredRef.current) return
-        if (dragTimeoutRef.current) {
-            clearTimeout(dragTimeoutRef.current);
-            dragTimeoutRef.current = null;
-        }
+        endDrag();
         props.onClick(itemId)
     }
 
@@ -144,14 +153,8 @@ export default function ListView(props: ListViewProps){
         return s.join(" ")
     }
 
-    const getDragPlaceholderStyle = (): CSSProperties => {
-        return {
-            backgroundColor: "transparent",
-            border: "1px dashed #00BFFF",
-            background: "#00BFFF17",
-            cursor: "default",
-            pointerEvents: "none"
-        }
+    const getDragPlaceholderClassName = () => {
+        return [styles["placeholder"], styles['list-item']].join(" ")
     }
 
     const getDraggedItemStyles = () => {
@@ -178,15 +181,15 @@ export default function ListView(props: ListViewProps){
                 )}
                 {draggedIndex === i ?
                     (<>
-                    <div key={i} ref={e => {itemRefs.current[i] = e}} className={styles['list-item']} style={getDragPlaceholderStyle()} onClick={() => props.onClick(item.id)} onContextMenu={(e) => {openContextMenu(e, i)}}>
+                    <div key={"placeholder"} ref={e => {itemRefs.current[i] = e}} className={getDragPlaceholderClassName()} onClick={() => props.onClick(item.id)} onContextMenu={(e) => {handleContextMenu(e, i)}}>
                         <div className={styles['item-text']}>{item.text}</div>
                     </div>
-                    <div key={i} ref={e => {itemRefs.current[i] = e}} className={getItemClassName(item)} style={getDraggedItemStyles()} onMouseDown={(e) => {handleMouseDown(e,i)}}>
+                    <div key={i} className={getItemClassName(item)} style={getDraggedItemStyles()} onMouseDown={(e) => {handleMouseDown(e,i)}}>
                         <div className={styles['item-text']}>{item.text}</div>
                     </div>
                     </>)
                 : 
-                    <div key={i} ref={e => {itemRefs.current[i] = e}} className={getItemClassName(item)} onClick={() => handleClick(item.id)} onMouseDown={(e) => {handleMouseDown(e,i)}} onContextMenu={(e) => {openContextMenu(e, i)}}>
+                    <div key={i} ref={e => {itemRefs.current[i] = e}} className={getItemClassName(item)} onClick={() => handleClick(item.id)} onMouseDown={(e) => {handleMouseDown(e,i)}} onContextMenu={(e) => {handleContextMenu(e, i)}}>
                         <div className={styles['item-text']}>{item.text}</div>
                         <ListViewContextMenu className={getContextMenuClassName(i)} contextButtons={getContextButtons(item)} onOutsideClick={() => {contextMenuIndex === i ? closeContextMenu() : null}}></ListViewContextMenu>
                     </div>
