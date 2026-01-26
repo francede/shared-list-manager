@@ -18,21 +18,25 @@ export const listView: Story = {
             id: "1001",
             text: "Test 1",
             checked: false,
+            loadingState: "none"
         },
         {
             id: "1002",
             text: "Test 2",
             checked: false,
+            loadingState: "loading"
         },
         {
             id: "1003",
             text: "Test 3",
             checked: true,
+            loadingState: "loaded"
         },
         {
             id: "1004",
             text: "Test 4",
             checked: true,
+            loadingState: "loading"
         }],
         onClick: (itemId: string) => {
             console.log(itemId + " clicked")

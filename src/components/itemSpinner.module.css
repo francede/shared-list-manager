@@ -10,7 +10,7 @@
 .spinner{
     height: 4px;
     width: 24px;
-    background-color: #ddd;
+    background-color: #90909044;
     position: relative;
     transition: 0.5s;
 }

@@ -8,7 +8,7 @@ const meta = {
     layout: 'centered',
   },
   argTypes: {
-    spinningState: { control: "radio", options: ["spinning", "done", "gone"] },
+    spinningState: { control: "radio", options: ["loading", "loaded", "none"] },
   },
 } satisfies Meta<typeof ItemSpinner>;
 
@@ -17,6 +17,6 @@ type Story = StoryObj<typeof meta>;
 
 export const itemSpinner: Story = {
   args: {
-    spinningState: "spinning",
+    spinningState: "loading",
   },
 };

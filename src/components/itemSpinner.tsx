@@ -1,7 +1,7 @@
 "use client"
 
 import styles from './itemSpinner.module.css'
-import React, { useState } from 'react';
+import React from 'react';
 
 export default function ItemSpinner(props: ItemSpinnerProps){
 
@@ -12,13 +12,13 @@ export default function ItemSpinner(props: ItemSpinnerProps){
 
     const getSpinnerStyles = () => {
         const s = [styles["spinner"]];
-        if(props.spinningState === "done" || props.spinningState === "gone") s.push(styles['invisible']);
+        if(props.spinningState === "loaded" || props.spinningState === "none") s.push(styles['invisible']);
         return s.join(" ")
     }
 
     const getCheckmarkStyles = () => {
         const s = [styles["checkmark"], "material-symbols-outlined"]
-        if(props.spinningState === "spinning" || props.spinningState === "gone") s.push(styles['invisible']);
+        if(props.spinningState === "loading" || props.spinningState === "none") s.push(styles['invisible']);
         return s.join(" ")
     }
 
@@ -37,6 +37,8 @@ export default function ItemSpinner(props: ItemSpinnerProps){
 
 }
 
+export type ItemSpinnerState = "loading" | "loaded" | "none"
+
 export type ItemSpinnerProps = {
-    spinningState: "spinning" | "done" | "gone"
+    spinningState: ItemSpinnerState
 }

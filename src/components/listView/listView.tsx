@@ -3,6 +3,7 @@
 import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
 import styles from './listView.module.css'
 import React from 'react';
+import ItemSpinner, { ItemSpinnerState } from '../itemSpinner';
 
 
 export default function ListView(props: ListViewProps){
@@ -148,6 +149,9 @@ export default function ListView(props: ListViewProps){
 
     const handlePointerDown = (e: React.PointerEvent, index: number) => {
         if(!props.onDrag || e.button !== 0 || editIndex) return
+        if((e.target as HTMLElement).closest('button, input, textarea, select, [contenteditable="true"]')){
+            return
+        }
         e.preventDefault()
         e.currentTarget.setPointerCapture(e.pointerId)
         if(e.pointerType === "mouse"){
@@ -224,8 +228,6 @@ export default function ListView(props: ListViewProps){
         return styles;
     }
 
-    const Tag = props.links ? "a" : "div"
-
     return(
         <div className={styles['list-container']} ref={containerRef}>
             {props.list?.map((item, i) => 
@@ -241,7 +243,7 @@ export default function ListView(props: ListViewProps){
                         </div>
                     }
 
-                    <Tag key={i} 
+                    <div key={i} 
                         ref={(e: HTMLElement | null) => {itemRefs.current[i] = e}} 
                         className={getItemClassName(item,i)}
                         style={getDraggedItemStyles(i)}
@@ -259,8 +261,9 @@ export default function ListView(props: ListViewProps){
                         :
                             <div className={styles['item-text']}>{item.text}</div>
                         }
+                        <ItemSpinner spinningState={item.loadingState}></ItemSpinner>
                         <ListViewContextMenu className={getContextMenuClassName(i)} contextButtons={getContextButtons(item, i)} onOutsideClick={() => {contextMenuIndex === i ? closeContextMenu() : null}}></ListViewContextMenu>
-                    </Tag>
+                    </div>
                 </div>
 
                 </React.Fragment>
@@ -277,7 +280,8 @@ export type ListViewItem = {
     id: string
     text: string
     checked: boolean
-    highlight?: boolean
+    highlight?: boolean,
+    loadingState: ItemSpinnerState
 }
 
 export type ListViewContextMenuButton = {
@@ -292,7 +296,6 @@ export type ListViewProps = {
     onEdit?: (itemId: string, text: string) => void
     onDelete?: (itemId: string) => void
     onUndo?: (itemId: string) => void
-    links?: boolean
 }
 
 export function ListViewContextMenu(props: ListViewContextMenuProps){
@@ -337,4 +340,25 @@ export type ListViewContextMenuProps = {
     contextButtons: ListViewContextMenuButton[]
     onOutsideClick: () => void
     className?: string
+}
+
+export function LinkListView(props: LinkListViewProps){
+    return(
+        <div className={styles['list-container']}>
+            {props.list?.map((item, i) => 
+                <a key={i} className={styles["list-item"]} href={item.href}>
+                    <div className={styles["item-text"]}>{item.text}</div>
+                </a>
+            )}
+        </div>
+    )
+}
+
+export type LinkListViewItem = {
+    text: string
+    href: string
+}
+
+export type LinkListViewProps = {
+    list: LinkListViewItem[]
 }

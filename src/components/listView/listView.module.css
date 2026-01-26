@@ -13,9 +13,12 @@
     transition: background-color 0.5s;
     position: relative;
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 8px;
     cursor: pointer;
     touch-action: none;
+    min-width: 100px;
 }
 
 .list-item:not(.edited):hover{
