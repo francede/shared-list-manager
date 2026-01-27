@@ -6,6 +6,8 @@ import { OPTIONS } from './api/auth/[...nextauth]/route'
 import SharedListSessionProvider from '@/components/providers/SharedListSessionProvider'
 import { AblyClientProvider } from '@/components/providers/AblyClientProvider'
 import styles from './layout.module.css'
+import { DynamicListChannelProvider } from '@/components/providers/DynamicListChannelProvider'
+import { useState } from 'storybook/internal/preview-api'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,6 +21,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const session = await getServerSession(OPTIONS)
+  const [listId, setListId] = useState<string | null>(null)
 
 
   return (
@@ -26,9 +29,11 @@ export default async function RootLayout({
       <body className={inter.className}>
         <SharedListSessionProvider session={session}>
           <AblyClientProvider>
-            <div className={styles['layout']}>
-              {children}
-            </div>
+            <DynamicListChannelProvider>
+              <div className={styles['layout']}>
+                {children}
+              </div>
+            </DynamicListChannelProvider>
           </AblyClientProvider>
         </SharedListSessionProvider>
       </body>

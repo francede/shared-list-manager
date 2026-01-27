@@ -12,6 +12,7 @@ import { EditItemRequestBody } from "@/app/api/list/[id]/edit/route";
 import { randomUUID } from "crypto";
 import { ClearCheckedRequestBody } from "@/app/api/list/[id]/clear/route";
 import sharedListUtils from "@/utils/sharedListUtils";
+import { useListContext } from "../providers/DynamicListChannelProvider";
 
 
 export function useSharedList(listId: string) {
@@ -21,6 +22,7 @@ export function useSharedList(listId: string) {
     const [deletingList, setDeletingList] = useState(false)
     const [error, setError] = useState<string | null>(null);
     const [pendingOperations, setPendingOperations] = useState<string[]>([])
+    const { setActiveListId } = useListContext();
 
     const sortedList = useMemo((): SharedList | null => {
         if(!list) return list
@@ -52,7 +54,7 @@ export function useSharedList(listId: string) {
 
     useEffect(() => {
         getList();
-       
+        setActiveListId(listId)
     }, [listId, getList]);
 
     function handleMessage(message: Message){
