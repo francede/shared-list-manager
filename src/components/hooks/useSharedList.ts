@@ -31,19 +31,19 @@ export function useSharedList(listId: string) {
         }
     }, [list])
 
-    const loadingItemIds = useMemo((): number[] => {
+    const loadingItemIds = useMemo((): string[] => {
         if(!list || pendingOperations.length === 0) return []
 
-        const indexes: number[] = []
+        const ids: string[] = []
 
         pendingOperations.forEach(po => {
-            const index = sortedList?.items?.findIndex(item => item.opId === po)
-            if (index !== undefined && !indexes.includes(index)){
-                indexes.push(index)
+            const item = sortedList?.items?.find(item => item.opId === po)
+            if (item !== undefined && !ids.includes(item._id)){
+                ids.push(item._id)
             }
         })
 
-        return indexes
+        return ids
     }, [list])
 
     useChannel(`list:${listId}`, (message) => {
@@ -232,7 +232,7 @@ export function useSharedList(listId: string) {
         });
     }, [listId]);
 
-    const moveItem = useCallback(async (itemId: string, itemIdBefore?: string, itemIdAfter?: string) => {
+    const moveItem = useCallback(async (itemId: string, itemIdBefore: string | null, itemIdAfter: string | null) => {
         const itemAfter = list?.items?.find(e => e._id === itemIdAfter)
         const itemBefore = list?.items?.find(e => e._id === itemIdBefore)
 
@@ -254,8 +254,8 @@ export function useSharedList(listId: string) {
 
         const body: MoveItemRequestBody = {
             itemId: itemId,
-            itemIdBefore: itemIdBefore,
-            itemIdAfter: itemIdAfter,
+            itemIdBefore: itemIdBefore ?? undefined,
+            itemIdAfter: itemIdAfter ?? undefined,
             opId
         }
         await fetch(`/api/list/${listId}/move`, {

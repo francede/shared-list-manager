@@ -1,6 +1,5 @@
 "use client"
 
-import { SharedListResponse } from '@/services/sharedListRepository'
 import { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
 import Spinner from '@/components/spinner';
@@ -8,12 +7,14 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 import '@/app/globalicons.css'
 import Dialog from '@/components/dialog';
 import utils from '@/utils/validationUtils';
+import { SharedList } from '../api/services/sharedListRepository';
+import { LinkListView, LinkListViewItem } from '@/components/listView/listView';
 
 
 export default function Lists() {
     const session = useSession();
-    const [ownedLists, setOwnedLists] = useState<SharedListResponse[] | null>(null);
-    const [viewableLists, setViewableLists] = useState<SharedListResponse[] | null>(null);
+    const [ownedLists, setOwnedLists] = useState<SharedList[] | null>(null);
+    const [viewableLists, setViewableLists] = useState<SharedList[] | null>(null);
     const [createListDialogOpen, setCreateListDialogOpen] = useState<boolean>(false);
     const [newList, setNewList] = useState<{name: string, viewers: string[]}>({name: '', viewers: []});
     const [newListViewerInput, setNewListViewerInput] = useState<string>('');
@@ -66,7 +67,15 @@ export default function Lists() {
         if(ownedLists.length === 0){
             return 'no owned lists'
         }
-        return ownedLists?.map((list, i) => <a key={i} href={`/list/${list._id}`}>{list.name}</a>)
+        console.log(ownedLists)
+        const ownedListsToView = ownedLists?.map(ownedList => {
+            return {
+                text: ownedList.name ?? "UNDEFINED",
+                href: `/list/${ownedList._id}`
+            }
+        })
+
+        return <LinkListView list={ownedListsToView}></LinkListView>
     }
 
     let getViewableLists = () => {
@@ -76,7 +85,13 @@ export default function Lists() {
         if(viewableLists.length === 0){
             return 'no viewable lists'
         }
-        return viewableLists?.map((list, i) => <a key={i} href={`/list/${list._id}`}>{list.name}</a>)
+        const viewableListsToView = viewableLists?.map(viewableList => {
+            return {
+                text: viewableList.name ?? "UNDEFINED",
+                href: `/list/${viewableList._id}`
+            }
+        })
+        return <LinkListView list={viewableListsToView}></LinkListView>
     }
 
     let addViewer = () => {
@@ -88,7 +103,7 @@ export default function Lists() {
     return (
         <>
             {
-                createListDialogOpen ? 
+                createListDialogOpen && 
                 <Dialog title='Create New List' close={() => {setCreateListDialogOpen(false)}}>
                     <div className={styles['dialog-container']}>
                         <div className={styles['input-container']}>
@@ -121,7 +136,6 @@ export default function Lists() {
                         }
                     </div>
                 </Dialog>
-                : null
             }
             
             <div className={styles['auth-container']}>

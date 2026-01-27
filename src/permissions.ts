@@ -8,6 +8,13 @@ export type PermissionRule = {
 };
 
 export const PERMISSIONS: PermissionRule[] = [
+  // View lists
+  {
+    pattern: /^\/api\/lists$/,
+    methods: ["GET"],
+    requiredRole: "authenticated"
+  },
+
   // Create list
   {
     pattern: /^\/api\/list$/,
@@ -48,6 +55,13 @@ export const PERMISSIONS: PermissionRule[] = [
     pattern: /^\/api\/auth\/(?!token).*$/,
     methods: ["GET"],
     requiredRole: "authenticated"
+  },
+
+  // Signin
+  {
+    pattern: /^\/api\/auth\/signin\/.*$/,
+    methods: ["GET", "POST"],
+    requiredRole: null
   },
 
   // Non-API

@@ -7,21 +7,27 @@ import { CheckItemRequestBody } from "../list/[id]/check/route";
 import { DeleteItemRequestBody } from "../list/[id]/delete/route";
 import { ClearCheckedRequestBody } from "../list/[id]/clear/route";
 import { EditItemRequestBody } from "../list/[id]/edit/route";
-import { MoveItemRequestBody } from "../list/[id]/move/route";
+import { MoveItemRequestBody } from "../list/[id]/move/route"
+import dns from "dns/promises";
+
+export const runtime = "nodejs";
+
+console.log(process.env.NODE_OPTIONS)
 
 const MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
-const sharedListModel = mongoose.models["SharedList"] || mongoose.model("SharedList", new mongoose.Schema<SharedList>({
+const SharedListItemSchema = new mongoose.Schema({
+        _id: mongoose.Schema.Types.ObjectId,
+        text: {type: String, minlength:1}, 
+        checked: Boolean,
+        position: Number
+    })
+const sharedListModel: mongoose.Model<SharedList> = mongoose.models["SharedList"] || mongoose.model("SharedList", new mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     version: Number,
     name: {type: String, minlength:1},
     owner: String,
     viewers: [String],
-    items: [new mongoose.Schema({
-        _id: mongoose.Schema.Types.ObjectId,
-        text: {type: String, minlength:1}, 
-        checked: Boolean,
-        position: Number
-    })],
+    items: [SharedListItemSchema],
     
 }), "SharedList");
 
@@ -54,7 +60,8 @@ export async function createSharedList(name: string, owner: string, viewers: str
         name: name,
         owner: owner,
         viewers: viewers,
-        items: []
+        items: [],
+        version: 1
     }
     await connect();
     return await new sharedListModel(list).save();
@@ -132,6 +139,8 @@ export async function updateSharedListAddItem(listID: string, body: AddItemReque
         { _id: listID }
     );
 
+    if(!updated) return false
+
     const event: AddItemEvent = {
         item: {
             id: item._id,
@@ -161,6 +170,8 @@ export async function updateSharedListCheckItem(listID: string, body: CheckItemR
     const updated = await sharedListModel.findOne(
         { _id: listID },
     );
+
+    if(!updated) return false
     
     const event: CheckItemEvent = {
         itemId: body.itemId,
@@ -187,6 +198,8 @@ export async function updateSharedListDeleteItem(listID: string, body: DeleteIte
         { _id: listID }
     );
 
+    if(!updated) return false
+
     const event: DeleteItemEvent = {
         itemId: body.itemId,
         version: updated.version,
@@ -210,6 +223,8 @@ export async function updateSharedListClearChecked(listID: string, body: ClearCh
     const updated = await sharedListModel.findOne(
         { _id: listID }
     );
+
+    if(!updated) return false
 
     const event: ClearCheckedEvent = {
         version: updated.version,
@@ -236,6 +251,8 @@ export async function updateSharedListEditItem(listID: string, body: EditItemReq
     const updated = await sharedListModel.findOne(
         { _id: listID }
     );
+
+    if(!updated) return false
 
     const event: EditItemEvent = {
         itemId: body.itemId,
@@ -280,6 +297,8 @@ export async function updateSharedListMoveItem(listID: string, body: MoveItemReq
         { _id: listID }
     );
 
+    if(!updated) return false
+
     const event: MoveItemEvent = {
         itemId: body.itemId,
         position: newPosition,
@@ -293,12 +312,12 @@ export async function updateSharedListMoveItem(listID: string, body: MoveItemReq
 }
 
 export type SharedList = {
-    _id?: string
-    version?: number
-    name?: string
-    owner?: string
-    viewers?: string[]
-    items?: SharedListItem[]
+    _id: string
+    version: number
+    name: string
+    owner: string
+    viewers: string[]
+    items: SharedListItem[]
 };
 
 export type SharedListItem = {

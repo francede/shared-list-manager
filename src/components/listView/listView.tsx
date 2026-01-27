@@ -38,8 +38,8 @@ export default function ListView(props: ListViewProps){
         }
 
         if(draggedIndexRef.current !== null && insertionIndexRef.current !== null){
-            
-            props.onDrag(props.list[draggedIndexRef.current].id, insertionIndexRef.current)
+            const itemBefore = insertionIndexRef.current === 0 ? null : props.list[insertionIndexRef.current-1]
+            props.onDrag(props.list[draggedIndexRef.current].id, itemBefore?.id ?? null)
         }
 
         setDraggedIndex(null)
@@ -291,7 +291,7 @@ export type ListViewContextMenuButton = {
 
 export type ListViewProps = {
     list: ListViewItem[]
-    onDrag?: (itemId: string, newIndex: number) => void
+    onDrag?: (itemId: string, itemIdBefore: string | null) => void
     onClick: (itemId: string) => void
     onEdit?: (itemId: string, text: string) => void
     onDelete?: (itemId: string) => void

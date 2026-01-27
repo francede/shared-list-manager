@@ -15,7 +15,5 @@ export async function GET(req: NextRequest) {
         //ttl: 120*60*1000 //2h, default 1h
     });
 
-    console.log(tokenRequest)
-
     return NextResponse.json(tokenRequest);
 }

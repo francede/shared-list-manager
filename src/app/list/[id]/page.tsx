@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import styles from './styles.module.scss'
 import '@/app/globalicons.css'
 import React from 'react';
@@ -11,24 +11,26 @@ import utils from '@/utils/validationUtils'
 import { useSession } from 'next-auth/react'
 import { useSharedList } from '@/components/hooks/useSharedList'
 import { SharedListItem, UpdateMetadataRequestBody } from '@/app/api/services/sharedListRepository';
+import ListView, { ListViewItem } from '@/components/listView/listView';
+import { useSharedListWithLoadingStatus } from '@/components/hooks/useSharedListLoadingItems';
 
 export default function Lists(props: Props){
     const router = useRouter();
     const session = useSession();
-    const {list, deleteItem, checkItem, deleteList, loadingItemIds, updateListMetadata, deletingList} = useSharedList(props.params.id);
+    const {list, addItem, editItem, deleteItem, checkItem, moveItem, deleteList, loadingItemIds, updateListMetadata, deletingList, clearChecked} = useSharedList(props.params.id);
+    const listItemsWithLoadingStatus = useSharedListWithLoadingStatus(list?.items ?? [], loadingItemIds)
     const [itemIdToDelete, setItemIdToDelete] = useState<string | null>(null);
-    const [input, setInput] = useState<string>('');
+    const [newItemInput, setNewItemInput] = useState<string>('');
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
-    const [editListDialogOpen, setEditListDialogOpen] = useState<boolean>(false);
-    const [aboutToDelete, setAboutToDelete] = useState<boolean>(false);
-    const [nameInput, setNameInput] = useState<string>('');
+    const [editListMetadataDialogOpen, setEditListMetadataDialogOpen] = useState<boolean>(false);
+    const [listNameInput, setListNameInput] = useState<string>('');
     const [viewersInputList, setViewerInputList] = useState<string[] | null>(null);
     const [newViewerInput, setNewViewerInput] = useState<string>('');
 
-    let saveMetaData = () => {
+    const saveMetaData = () => {
         const body: UpdateMetadataRequestBody = {};
-        if(nameInput) {
-            body.name = nameInput
+        if(listNameInput) {
+            body.name = listNameInput
         }
         if(viewersInputList !== null){
             body.viewers = viewersInputList
@@ -39,19 +41,31 @@ export default function Lists(props: Props){
         })
     }
 
-    let deleteListWithConfirmation = () => {
-        if(!aboutToDelete){
-            setAboutToDelete(true);
+    const confirmDeleteList = () => {
+        if(!confirm("Are you sure you want to delete this list permanently? This actin cannot be undone.")){
             return;
         }
-
         deleteList(() => {
             router.replace('/lists');
         })
     }
 
-    let clickElement = (item: SharedListItem) => {
-        if(item.checked){
+    const listViewItems = useMemo((): ListViewItem[] => {
+        return listItemsWithLoadingStatus?.map((item, i) => {
+            return {
+                id: item._id,
+                text: item.text,
+                checked: item.checked,
+                loadingState: item.status
+            }
+        })
+    }, [list])
+
+    const itemWithIdClicked = (itemId: string) => {
+        const item = list?.items?.find((i) => i._id === itemId);
+        if(!item) return;
+
+        if(item?.checked){
             if(item._id === itemIdToDelete){
                 deleteItem(item._id)
                 setItemIdToDelete(null);
@@ -63,12 +77,14 @@ export default function Lists(props: Props){
             checkItem(item._id);
         }
     };
-    
-    let getElementClassName = (item: SharedListItem) => {
-        const s = [styles["list-item"]];
-        if(item.checked) s.push(styles['checked']);
-        if(item._id === itemIdToDelete) s.push(styles['to-delete']);
-        return s.join(" ")
+
+    const itemDragged = (itemId: string, itemIdBefore: string | null) => {
+        if(!list?.items) return
+        const itemBeforeIndex = list.items.findIndex(i => i._id === itemIdBefore);
+        const itemAfterIndex = itemBeforeIndex === undefined ? 0 : 
+             (itemBeforeIndex + 1 === list.items.length ? null : itemBeforeIndex + 1)
+        const itemAfter = itemAfterIndex === null ? null : list.items[itemAfterIndex]
+        moveItem(itemId, itemIdBefore, itemAfter?._id ?? null)
     }
 
     let getSavedText = () => {
@@ -91,24 +107,24 @@ export default function Lists(props: Props){
     }
 
     let openEditListDialog = () => {
-        setEditListDialogOpen(true);
-        setNameInput('');
+        setEditListMetadataDialogOpen(true);
+        setListNameInput('');
         setViewerInputList(list?.viewers || []);
     }
 
     let closeEditListDialog = () => {
         if(deletingList) return;
-        setEditListDialogOpen(false);
+        setEditListMetadataDialogOpen(false);
     }
 
     return (
         <div className={styles['list-page']}>
-            {editListDialogOpen ? 
+            {editListMetadataDialogOpen ? 
             <Dialog title='Edit List' close={() => {closeEditListDialog()}}>
                 <div className={styles['dialog-container']}>
                         <div className={styles['input-container']}>
                             <div  className={styles['input-row']}>
-                                name: <input placeholder={list?.name} onChange={(e) => setNewName(e.target.value)}></input>
+                                name: <input placeholder={list?.name} onChange={(e) => setListNameInput(e.target.value)}></input>
                             </div>
                             <div className={styles['input-row']}>
                                 viewers:
@@ -118,11 +134,11 @@ export default function Lists(props: Props){
                                 </div>
                             </div>
                             {
-                            newViewers.map((v, i) => 
+                            viewersInputList?.map((v, i) => 
                                 <div key={i} className={styles['viewer-row']}>
                                     {v}
                                     <button className="material-symbols-outlined" 
-                                    onClick={() => {setNewViewers(newViewers.toSpliced(i, 1))}}>close</button>
+                                    onClick={() => {setViewerInputList(viewersInputList.toSpliced(i, 1))}}>close</button>
                                 </div>
                             )}
                         </div>
@@ -131,8 +147,7 @@ export default function Lists(props: Props){
                         getSpinner() ||
                         <div className={styles['button-container']}>
                             <div style={{position: 'relative'}}>
-                                {aboutToDelete ? <div className={styles['delete-warning']}>Click again to confirm</div> : null}
-                                <button className='warning' onClick={() => {deleteList()}} onBlur={() => setAboutToDelete(false)}>Delete List</button>
+                                <button className='warning' onClick={() => {confirmDeleteList()}}>Delete List</button>
                             </div>
                             <button className='primary' onClick={() => saveMetaData()}>Save Changes</button>
                         </div>
@@ -148,7 +163,11 @@ export default function Lists(props: Props){
                     onBlur={() => setSettingsOpen(false)}>settings</button>
 
                 <div className={settingsOpen ? styles['open'] : styles['closed']}>
-                    <button className={styles['menu-button']} onClick={() => clearChecked()}><span className="material-symbols-outlined">delete_forever</span>Clear checked</button>
+                    <button className={styles['menu-button']}
+                        onClick={() => clearChecked()}>
+                            <span className="material-symbols-outlined">delete_forever</span>
+                            Clear checked
+                        </button>
                     {list?.owner === session.data?.user?.email ?
                     <button className={styles['menu-button']} onClick={() => openEditListDialog()}><span className="material-symbols-outlined">edit</span>Edit</button>
                     : null}                    
@@ -164,16 +183,20 @@ export default function Lists(props: Props){
                         </div>
                         {getSavedText()}
                     </div>
-                    <div className={styles['list-container']}>
-                        {list?.elements?.map((e, i) => 
-                            <div key={i} className={getElementClassName(e,i)} onClick={() => clickElement(i)}>
-                                <div>{e.name}</div>
-                            </div>
-                        )}
-                    </div>
+                    <ListView 
+                        list={listViewItems}
+                        onClick={(itemId) => itemWithIdClicked(itemId)}
+                        onDelete={(itemId) => {deleteItem(itemId)}}
+                        onEdit={(itemId, text) => {editItem(itemId, text)}}
+                        onDrag={(itemId, itemIdBefore) => {itemDragged(itemId, itemIdBefore)}}
+                    ></ListView>
                     <div  className={styles['input-container']}>
-                        <input enterKeyHint='enter' type='text' value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => {if(e.key === 'Enter') createElement()}}></input>
-                        <button disabled={input.length === 0} onClick={() => createElement()}>+</button>
+                        <input enterKeyHint='enter'
+                            type='text'
+                            value={newItemInput}
+                            onChange={(e) => setNewItemInput(e.target.value)}
+                            onKeyDown={(e) => {if(e.key === 'Enter') addItem(newItemInput)}}></input>
+                        <button disabled={newItemInput.length === 0} onClick={() => addItem(newItemInput)}>+</button>
                     </div>
                 </>
             }
