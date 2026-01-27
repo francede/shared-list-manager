@@ -54,13 +54,6 @@ export const PERMISSIONS: PermissionRule[] = [
   {
     pattern: /^\/api\/auth\/(?!token).*$/,
     methods: ["GET"],
-    requiredRole: "authenticated"
-  },
-
-  // Signin
-  {
-    pattern: /^\/api\/auth\/signin\/.*$/,
-    methods: ["GET", "POST"],
     requiredRole: null
   },
 
