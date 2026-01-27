@@ -9,7 +9,7 @@ export function DynamicListChannelProvider(props: DynamicListChannelProviderProp
     const [activeListId, setActiveListId] = useState<string | null>(null)
 
     return (
-        <ListContext.Provider value={{setActiveListId}}>
+        <ListContext.Provider value={{activeListId, setActiveListId}}>
             {activeListId ?
                 <ChannelProvider channelName={`list:${activeListId}`}>
                     {props.children}
@@ -26,6 +26,7 @@ export type DynamicListChannelProviderProps = {
 }
 
 interface ListContextValue {
+    activeListId: string | null
     setActiveListId: (newListId: string) => void
 } 
 

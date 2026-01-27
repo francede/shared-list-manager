@@ -22,7 +22,7 @@ export function useSharedList(listId: string) {
     const [deletingList, setDeletingList] = useState(false)
     const [error, setError] = useState<string | null>(null);
     const [pendingOperations, setPendingOperations] = useState<string[]>([])
-    const { setActiveListId } = useListContext();
+    const { activeListId, setActiveListId } = useListContext();
 
     const sortedList = useMemo((): SharedList | null => {
         if(!list) return list
@@ -48,9 +48,13 @@ export function useSharedList(listId: string) {
         return ids
     }, [list, pendingOperations, sortedList])
 
-    useChannel(`list:${listId}`, (message) => {
-        handleMessage(message)
-    });
+    if(listId === activeListId && activeListId !== null){
+        useChannel(`list:${listId}`, (message) => {
+            handleMessage(message)
+        });
+    }
+
+    
 
     useEffect(() => {
         getList();
