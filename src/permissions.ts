@@ -1,5 +1,5 @@
 export type Role = "owner" | "editor" | "authenticated";
-export type Method = "GET" | "POST" | "PATCH" | "DELETE"
+export type Method = "GET" | "POST" | "PATCH" | "DELETE" | "HEAD"
 
 export type PermissionRule = {
   pattern: RegExp;
@@ -11,7 +11,7 @@ export const PERMISSIONS: PermissionRule[] = [
   // View lists
   {
     pattern: /^\/api\/lists$/,
-    methods: ["GET"],
+    methods: ["GET", "HEAD"],
     requiredRole: "authenticated"
   },
 
@@ -25,7 +25,7 @@ export const PERMISSIONS: PermissionRule[] = [
   // View list
   {
     pattern: /^\/api\/list\/[^/]+$/,
-    methods: ["GET"],
+    methods: ["GET", "HEAD"],
     requiredRole: "editor"
   },
 
