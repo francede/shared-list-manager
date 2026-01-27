@@ -26,11 +26,9 @@ export default async function RootLayout({
       <body className={inter.className}>
         <SharedListSessionProvider session={session}>
           <AblyClientProvider>
-            <DynamicListChannelProvider>
               <div className={styles['layout']}>
                 {children}
               </div>
-            </DynamicListChannelProvider>
           </AblyClientProvider>
         </SharedListSessionProvider>
       </body>
