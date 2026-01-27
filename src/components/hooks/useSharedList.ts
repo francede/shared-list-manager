@@ -44,7 +44,7 @@ export function useSharedList(listId: string) {
         })
 
         return ids
-    }, [list])
+    }, [list, pendingOperations, sortedList])
 
     useChannel(`list:${listId}`, (message) => {
         handleMessage(message)
@@ -53,7 +53,7 @@ export function useSharedList(listId: string) {
     useEffect(() => {
         getList();
        
-    }, [listId]);
+    }, [listId, getList]);
 
     function handleMessage(message: Message){
         console.log("MESSAGE INBOUND (%s) --- V: %d", message.name, message.data.version)
@@ -204,6 +204,7 @@ export function useSharedList(listId: string) {
     }
 
     const addItem = useCallback(async (text: string) => {
+        if(!list) return
         const opId = getOpId()
         const itemPosition = list?.items?.reduce((max, current) => Math.max(max, current.position), 0) ?? 0 + 100
         const newItems = list?.items?.concat({
@@ -230,9 +231,10 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId]);
+    }, [listId, list, pendingOperations]);
 
     const moveItem = useCallback(async (itemId: string, itemIdBefore: string | null, itemIdAfter: string | null) => {
+        if(!list) return
         const itemAfter = list?.items?.find(e => e._id === itemIdAfter)
         const itemBefore = list?.items?.find(e => e._id === itemIdBefore)
 
@@ -245,6 +247,7 @@ export function useSharedList(listId: string) {
         }
 
         const newItems = list?.items?.map(i => i._id === itemId ? {...i, position: newPosition} : i)
+
         setList({
             ...list,
             items: newItems
@@ -263,9 +266,10 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId]);
+    }, [listId, list, pendingOperations]);
 
     const checkItem = useCallback(async (itemId: string) => {
+        if(!list) return
         const opId = getOpId()
         const item = list?.items?.find(e => e._id === itemId)
         if(!item || item.opId){
@@ -273,6 +277,7 @@ export function useSharedList(listId: string) {
         }
 
         const newItems = list?.items?.map(i => i._id === itemId ? {...i, checked: true} : i)
+
         setList({
             ...list,
             items: newItems
@@ -289,9 +294,11 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId]);
+    }, [listId, list, pendingOperations]);
 
     const deleteItem = useCallback(async (itemId: string) => {
+        if(!list) return
+
         const opId = getOpId()
         const item = list?.items?.find(e => e._id === itemId)
         if(!item || item.opId){
@@ -319,8 +326,10 @@ export function useSharedList(listId: string) {
 
 
     const editItem = useCallback(async (itemId: string, text: string) => {
+        if(!list) return
         const opId = getOpId()
         const item = list?.items?.find(e => e._id === itemId)
+
         if(!item || item.opId){
             throw("Item not found or not persisted")
         }
@@ -343,14 +352,15 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId]);
+    }, [listId, list, pendingOperations]);
+
 
 
     const clearChecked = useCallback(async () => {
+        if(!list) return
         const opId = getOpId()
 
         const newItems = list?.items?.filter(i => !i.checked)
-
         setList({
             ...list,
             items: newItems
@@ -366,7 +376,7 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId]);
+    }, [listId, list, pendingOperations]);
 
     return {
         list: sortedList,

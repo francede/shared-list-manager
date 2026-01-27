@@ -15,13 +15,15 @@ export const runtime = "nodejs";
 console.log(process.env.NODE_OPTIONS)
 
 const MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
-const SharedListItemSchema = new mongoose.Schema({
+
+const SharedListItemSchema = new mongoose.Schema<SharedListItem>({
         _id: mongoose.Schema.Types.ObjectId,
         text: {type: String, minlength:1}, 
         checked: Boolean,
         position: Number
     })
-const sharedListModel: mongoose.Model<SharedList> = mongoose.models["SharedList"] || mongoose.model("SharedList", new mongoose.Schema({
+
+const SharedListSchema = new mongoose.Schema<SharedList>({
     _id: mongoose.Schema.Types.ObjectId,
     version: Number,
     name: {type: String, minlength:1},
@@ -29,7 +31,9 @@ const sharedListModel: mongoose.Model<SharedList> = mongoose.models["SharedList"
     viewers: [String],
     items: [SharedListItemSchema],
     
-}), "SharedList");
+})
+
+const sharedListModel: mongoose.Model<SharedList> = (mongoose.models["SharedList"] as any || mongoose.model<SharedList>("SharedList", SharedListSchema , "SharedList")) as mongoose.Model<SharedList>;
 
 const ably = new Ably.Rest(process.env.ABLY_SERVER_API_KEY!)
 

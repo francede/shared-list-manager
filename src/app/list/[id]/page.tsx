@@ -59,7 +59,7 @@ export default function Lists(props: Props){
                 loadingState: item.status
             }
         })
-    }, [list])
+    }, [list, listItemsWithLoadingStatus])
 
     const itemWithIdClicked = (itemId: string) => {
         const item = list?.items?.find((i) => i._id === itemId);
@@ -89,8 +89,8 @@ export default function Lists(props: Props){
 
     let getSavedText = () => {
         return (<div className={styles['list-saved']}>{loadingItemIds.length === 0 ? 
-            <span>"all changes saved"</span> : 
-            <span>"saving..."<span className="material-symbols-outlined">check</span></span>
+            <span>all changes saved</span> : 
+            <span>saving...<span className="material-symbols-outlined">check</span></span>
         }</div>);
     }
 

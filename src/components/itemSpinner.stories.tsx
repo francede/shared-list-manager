@@ -15,7 +15,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const itemSpinner: Story = {
+export const ItemSpinnerTest: Story = {
   args: {
     spinningState: "loading",
   },

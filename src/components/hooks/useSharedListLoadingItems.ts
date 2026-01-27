@@ -29,7 +29,7 @@ export function useSharedListWithLoadingStatus(listItems: SharedListItem[], load
             }
         }
         previousLoadingItemIds.current = [...loadingItemIds]
-    }, loadingItemIds)
+    }, [loadingItemIds])
 
     const itemsWithLoadingStatus: SharedListItemWithLoadingStatus[] = useMemo(() => {
         const now = Date.now();
