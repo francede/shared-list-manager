@@ -53,7 +53,7 @@ export const PERMISSIONS: PermissionRule[] = [
   // Next-auth
   {
     pattern: /^\/api\/auth\/(?!token).*$/,
-    methods: ["GET"],
+    methods: ["GET", "POST"],
     requiredRole: null
   },
 
