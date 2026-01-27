@@ -8,11 +8,8 @@ import { DeleteItemRequestBody } from "../list/[id]/delete/route";
 import { ClearCheckedRequestBody } from "../list/[id]/clear/route";
 import { EditItemRequestBody } from "../list/[id]/edit/route";
 import { MoveItemRequestBody } from "../list/[id]/move/route"
-import dns from "dns/promises";
 
 export const runtime = "nodejs";
-
-console.log(process.env.NODE_OPTIONS)
 
 const MONGO_CONNECTION_STRING = process.env.MONGO_CONNECTION_STRING;
 
@@ -50,6 +47,7 @@ export async function getSharedList(id: string): Promise<SharedList | null>{
 
 export async function getSharedListsByOwner(owner: string): Promise<SharedList[]>{
     await connect();
+    console.log("GET BY OWNER",owner)
     return await sharedListModel.find({owner: owner}).exec();
 }
 

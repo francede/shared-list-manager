@@ -21,8 +21,8 @@ export async function middleware(request: NextRequest) {
 
     const email = await getUserEmail(request)
 
-    const roles = await getUserRoles(listId, email, request);
-    if (roles === null) return notFound();
+    const roles = await getUserRoles(listId, email, rule.requiredRole, request);
+    if (roles === null) return notFound("Error code 2002");
 
     if (!roleSatisfies(roles, rule.requiredRole)) {
         if (roles.length === 0) return unauthenticated();
@@ -32,8 +32,10 @@ export async function middleware(request: NextRequest) {
     const headers = new Headers(request.headers);
     if(email) headers.set("x-user-email", email);
 
+    console.log("SENDING", pathname, email)
+
     return NextResponse.next({
-    request: { headers }
+        request: { headers }
     });
 }
 
@@ -42,12 +44,12 @@ function extractListId(pathname: string): string | null {
   return match?.[1] ?? null;
 }
 
-async function getUserRoles(listId: string | null, email: string | null, request: NextRequest): Promise<Role[] | null>{
+async function getUserRoles(listId: string | null, email: string | null, requiredRole: Role | null, request: NextRequest): Promise<Role[] | null>{
     if (!email){
         return []
     }
-
-    if (!listId){
+    //TODO: Extract authenticated from roles
+    if (!listId || requiredRole === "authenticated" || requiredRole === null){
         return ["authenticated"]
     }
 
@@ -77,10 +79,10 @@ function notFound(msg?: string){
 }
 
 async function getUserEmail(request: NextRequest): Promise<string | null>{
-    if(process.env.NODE_ENV === "development"){
+    const token = await getToken({req: request})
+    if(process.env.NODE_ENV === "development" && token === null){
         return request.headers.get("x-test-user-email") ?? "anon@email.com"
     }
-
-    const token = await getToken({req: request})
+    
     return token?.email ?? null;
 }

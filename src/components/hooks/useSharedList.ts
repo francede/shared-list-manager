@@ -22,6 +22,15 @@ export function useSharedList(listId: string) {
     const [error, setError] = useState<string | null>(null);
     const [pendingOperations, setPendingOperations] = useState<string[]>([])
 
+    useChannel(`list:${listId}`, (message) => {
+        handleMessage(message)
+    });
+
+    useEffect(() => {
+        console.log("GETTING LIST")
+        getList();
+    }, [listId]);
+
     const sortedList = useMemo((): SharedList | null => {
         if(!list) return list
 
@@ -45,14 +54,6 @@ export function useSharedList(listId: string) {
 
         return ids
     }, [list, pendingOperations, sortedList])
-
-    useChannel(`list:${listId}`, (message) => {
-        handleMessage(message)
-    });
-
-    useEffect(() => {
-        getList();
-    }, [listId, getList]);
 
     function handleMessage(message: Message){
         console.log("MESSAGE INBOUND (%s) --- V: %d", message.name, message.data.version)
@@ -395,5 +396,7 @@ export function useSharedList(listId: string) {
     }
 
 function getOpId(): string{
-    return randomUUID();
+    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+    (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+  );
 }

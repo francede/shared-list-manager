@@ -29,6 +29,13 @@ export const PERMISSIONS: PermissionRule[] = [
     requiredRole: "editor"
   },
 
+  // Get roles
+  {
+    pattern: /^\/api\/list\/[^/]+\/roles$/,
+    methods: ["GET"],
+    requiredRole: "authenticated"
+  },
+
   // Viewer permissions (add, edit, remove, clear, move)
   {
     pattern: /^\/api\/list\/[^\/]+\/(add|edit|delete|clear|move|check)$/,

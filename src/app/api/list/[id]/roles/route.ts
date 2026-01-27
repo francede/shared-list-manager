@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
     const email = req.nextUrl.searchParams.get("email");
 
     const roles: RoleListResponse = {roles: []}
-
+    console.log(listId, email)
     if (!email){
         return NextResponse.json(roles);
     }
