@@ -93,58 +93,6 @@
     }
 }
 
-
-.list-container{
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}  
-
-.list-item{
-    background-color: #eee;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #aaa;
-    transition: background-color 0.5s;
-    
-}
-
-.list-item:hover{
-    background-color: #ddd;
-    cursor: pointer;
-}
-
-.checked{
-    background-color: #ddd;
-
-    div{
-        position: relative;
-        width: fit-content;
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-
-        &::after{
-            background-color: black;
-            position: absolute;
-            content: '';
-            top: 50%;
-            left: 0;
-            height: 2px;
-            animation-name: strikethrough;
-            animation-duration: 0.5s;
-            animation-fill-mode: both;
-        }
-    }
-    
-    &.to-delete{
-        color: red;
-        & > div::after{
-            background-color: red;
-        }
-    }
-}
-
 .input-container{
     display: flex;
     flex-direction: row;
@@ -155,17 +103,6 @@
 
 .input-container>button{
     font-size: larger;
-}
-
-.delete-warning{
-    position: absolute;
-    left: 50%;
-    transform: translate(-50%, -100%);
-    color: red;
-    white-space: nowrap;
-    animation-name: delete-warning;
-    animation-duration: 0.25s;
-    animation-fill-mode: forwards;
 }
 
 .dialog-container{

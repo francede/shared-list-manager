@@ -36,7 +36,8 @@ export const listView: Story = {
             id: "1004",
             text: "Test 4",
             checked: true,
-            loadingState: "loading"
+            loadingState: "loading",
+            highlight: true
         }],
         onClick: (itemId: string) => {
             console.log(itemId + " clicked")

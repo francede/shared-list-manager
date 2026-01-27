@@ -51,15 +51,16 @@ export default function ListsContent(props: Props){
     }
 
     const listViewItems = useMemo((): ListViewItem[] => {
-        return listItemsWithLoadingStatus?.map((item, i) => {
+        return listItemsWithLoadingStatus?.map((item) => {
             return {
                 id: item._id,
                 text: item.text,
                 checked: item.checked,
-                loadingState: item.status
+                loadingState: item.status,
+                highlight: item._id === itemIdToDelete
             }
         })
-    }, [list, listItemsWithLoadingStatus])
+    }, [list, itemIdToDelete, listItemsWithLoadingStatus])
 
     const itemWithIdClicked = (itemId: string) => {
         const item = list?.items?.find((i) => i._id === itemId);
@@ -88,7 +89,7 @@ export default function ListsContent(props: Props){
     }
 
     let getSavedText = () => {
-        return (<div className={styles['list-saved']}>{loadingItemIds.length === 0 ? 
+        return (<div className={styles['list-saved']}>{loadingItemIds.length === 0 || 1 === 2 ? 
             <span>all changes saved</span> : 
             <span>saving...<span className="material-symbols-outlined">check</span></span>
         }</div>);
@@ -119,6 +120,7 @@ export default function ListsContent(props: Props){
 
     return (
         <div className={styles['list-page']}>
+            <div>{itemIdToDelete}</div>
             {editListMetadataDialogOpen ? 
             <Dialog title='Edit List' close={() => {closeEditListDialog()}}>
                 <div className={styles['dialog-container']}>

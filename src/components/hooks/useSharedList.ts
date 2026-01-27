@@ -9,7 +9,6 @@ import { MoveItemRequestBody } from "@/app/api/list/[id]/move/route";
 import { CheckItemRequestBody } from "@/app/api/list/[id]/check/route";
 import { DeleteItemRequestBody } from "@/app/api/list/[id]/delete/route";
 import { EditItemRequestBody } from "@/app/api/list/[id]/edit/route";
-import { randomUUID } from "crypto";
 import { ClearCheckedRequestBody } from "@/app/api/list/[id]/clear/route";
 import sharedListUtils from "@/utils/sharedListUtils";
 
@@ -27,7 +26,6 @@ export function useSharedList(listId: string) {
     });
 
     useEffect(() => {
-        console.log("GETTING LIST")
         getList();
     }, [listId]);
 
@@ -51,6 +49,7 @@ export function useSharedList(listId: string) {
                 ids.push(item._id)
             }
         })
+        console.log("loadingIDs", ids)
 
         return ids
     }, [list, pendingOperations, sortedList])
@@ -62,6 +61,7 @@ export function useSharedList(listId: string) {
         }
 
         if(!list?.version || list.version + 1 !== message.data?.version){
+            console.log("LIST VERSION MISMATCH current:%d inbound:%d", list?.version, message.data.version)
             getList()
             return
         }
@@ -220,7 +220,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat(opId))
+        setPendingOperations([...pendingOperations, opId])
 
         const body: AddItemRequestBody = {
             text,
@@ -253,7 +253,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat(opId))
+        setPendingOperations([...pendingOperations, opId])
 
         const body: MoveItemRequestBody = {
             itemId: itemId,
@@ -283,7 +283,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat(opId))
+        setPendingOperations([...pendingOperations, opId])
 
         const body: CheckItemRequestBody = {
             itemId: itemId,
@@ -311,7 +311,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat(opId))
+        setPendingOperations([...pendingOperations, opId])
 
         const body: DeleteItemRequestBody = {
             itemId: itemId,
@@ -322,7 +322,7 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId]);
+    }, [listId, list, pendingOperations]);
 
 
     const editItem = useCallback(async (itemId: string, text: string) => {
@@ -340,7 +340,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat(opId))
+        setPendingOperations([...pendingOperations, opId])
 
         const body: EditItemRequestBody = {
             itemId: itemId,
@@ -366,7 +366,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations(pendingOperations.concat(opId))
+        setPendingOperations([...pendingOperations, opId])
 
         const body: ClearCheckedRequestBody = {
             opId: getOpId()

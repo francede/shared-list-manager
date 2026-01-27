@@ -47,7 +47,6 @@ export async function getSharedList(id: string): Promise<SharedList | null>{
 
 export async function getSharedListsByOwner(owner: string): Promise<SharedList[]>{
     await connect();
-    console.log("GET BY OWNER",owner)
     return await sharedListModel.find({owner: owner}).exec();
 }
 
@@ -115,8 +114,6 @@ export async function updateSharedListAddItem(listID: string, body: AddItemReque
             }
         }
     ]);
-
-    console.log(result)
 
     const maxPosition: number = result[0]?.maxPosition ?? 0;
 

@@ -53,10 +53,12 @@
 }
     
 .highlight{
+    transition: 0.5s;
     color: red;
 }
 
 .highlight > .item-text::after{
+    transition: 0.5s;
     background-color: red;
 }
 
