@@ -1,10 +1,9 @@
-export type Role = "owner" | "editor" | "authenticated";
 export type Method = "GET" | "POST" | "PATCH" | "DELETE" | "HEAD"
 
 export type PermissionRule = {
   pattern: RegExp;
   methods: Method[];
-  requiredRole: Role | null;
+  authRequired: boolean
 };
 
 export const PERMISSIONS: PermissionRule[] = [
@@ -12,62 +11,62 @@ export const PERMISSIONS: PermissionRule[] = [
   {
     pattern: /^\/api\/lists$/,
     methods: ["GET", "HEAD"],
-    requiredRole: "authenticated"
+    authRequired: true
   },
 
   // Create list
   {
     pattern: /^\/api\/list$/,
     methods: ["POST"],
-    requiredRole: "authenticated"
+    authRequired: true
   },
 
   // View list
   {
     pattern: /^\/api\/list\/[^/]+$/,
     methods: ["GET", "HEAD"],
-    requiredRole: "editor"
+    authRequired: true
   },
 
   // Get roles
   {
     pattern: /^\/api\/list\/[^/]+\/roles$/,
     methods: ["GET"],
-    requiredRole: "authenticated"
+    authRequired: true
   },
 
   // Viewer permissions (add, edit, remove, clear, move)
   {
     pattern: /^\/api\/list\/[^\/]+\/(add|edit|delete|clear|move|check)$/,
     methods: ["POST"],
-    requiredRole: "editor"
+    authRequired: true
   },
 
   // Delete list / update metadata
   {
     pattern: /^\/api\/list\/[^/]+$/,
     methods: ["DELETE", "PATCH"],
-    requiredRole: "owner"
+    authRequired: true
   },
 
   // Auth token
   {
     pattern: /^\/api\/auth\/token$/,
     methods: ["GET"],
-    requiredRole: "authenticated"
+    authRequired: true
   },
 
   // Next-auth
   {
     pattern: /^\/api\/auth\/(?!token).*$/,
     methods: ["GET", "POST"],
-    requiredRole: null
+    authRequired: false
   },
 
   // Non-API
   {
     pattern: /^\/(?!api).*$/,
     methods: ["GET"],
-    requiredRole: null
+    authRequired: false
   }
 ];

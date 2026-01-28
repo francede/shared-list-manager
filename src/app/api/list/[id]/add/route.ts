@@ -1,11 +1,10 @@
 import { updateSharedListAddItem } from "@/app/api/services/sharedListRepository";
+import { userHasRole } from "@/app/api/services/userRoleService";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest, params: {params: {id: string}}) {
-    const email = req.headers.get("x-user-email");
-
-    if (!email) {
-        return NextResponse.json({message: 'unauthenticated'}, {status: 401})
+    if(!await userHasRole(req, "editor")){
+        return NextResponse.json({message: 'unauthorized'}, {status: 403})
     }
 
     let response;

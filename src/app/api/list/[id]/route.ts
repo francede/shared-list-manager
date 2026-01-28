@@ -1,7 +1,12 @@
 import { UpdateMetadataRequestBody, deleteSharedList, getSharedList, updateSharedListMetadata } from "@/app/api/services/sharedListRepository";
 import { NextRequest, NextResponse } from "next/server";
+import { userHasRole } from "../../services/userRoleService";
 
-export async function GET(_: NextRequest, params: {params: {id: string}}) {
+export async function GET(req: NextRequest, params: {params: {id: string}}) {
+    if(!await userHasRole(req, "editor")){
+        return NextResponse.json({message: 'unauthorized'}, {status: 403})
+    }
+    
     let sharedList;
     await getSharedList(params.params.id).then(res => {
         sharedList = res
@@ -11,10 +16,8 @@ export async function GET(_: NextRequest, params: {params: {id: string}}) {
 }
 
 export async function PATCH(req: NextRequest, params: {params: {id: string}}) {
-    const email = req.headers.get("x-user-email");
-
-    if (!email) {
-        return NextResponse.json({message: 'unauthenticated'}, {status: 401})
+    if(!await userHasRole(req, "owner")){
+        return NextResponse.json({message: 'unauthorized'}, {status: 403})
     }
 
     const body = (await req.json()) as UpdateMetadataRequestBody
@@ -23,10 +26,8 @@ export async function PATCH(req: NextRequest, params: {params: {id: string}}) {
 }
 
 export async function DELETE(req: NextRequest, params: {params: {id: string}}) {
-    const email = req.headers.get("x-user-email");
-
-    if (!email) {
-        return NextResponse.json({message: 'unauthenticated'}, {status: 401})
+    if(!await userHasRole(req, "owner")){
+        return NextResponse.json({message: 'unauthorized'}, {status: 403})
     }
 
     let response;
