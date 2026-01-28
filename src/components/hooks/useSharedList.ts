@@ -32,15 +32,6 @@ export function useSharedList(listId: string) {
         getList();
     }, [listId]);
 
-    const sortedList = useMemo((): SharedList | null => {
-        if(!list) return list
-
-        return {
-            ...list,
-            items: list.items?.toSorted((a,b) => a.position - b.position)
-        }
-    }, [list])
-
     const hasPendingOperations = useMemo(() => {
         for(const [opId] of operations){
             if(!fulfilledOperationsTimeoutsRef.current.has(opId)){
@@ -69,7 +60,9 @@ export function useSharedList(listId: string) {
             }
 
             return { ...item, status: "none" };
-        });
+        })
+        .toSorted((a,b) => a.position - b.position);
+
         return (listWithStatus ?? []) as (SharedListItem & {status: ItemSpinnerState})[]
     }, [list, operations])
 
@@ -422,7 +415,7 @@ export function useSharedList(listId: string) {
     }, [listId, list]);
 
     return {
-        list: sortedList,
+        list,
         loading,
         hasPendingOperations,
         deletingList,
