@@ -56,7 +56,6 @@ export default function ListsContent(props: Props){
                 checked: item.checked,
                 loadingState: item.status,
                 highlight: item._id === itemIdToDelete,
-                position: item.position
             }
         }) ?? []
     }, [list, itemIdToDelete, listItemsWithStatus])
