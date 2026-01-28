@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, SLEvent, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
 import { useChannel } from "ably/react";
 import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";
@@ -11,7 +11,9 @@ import { DeleteItemRequestBody } from "@/app/api/list/[id]/delete/route";
 import { EditItemRequestBody } from "@/app/api/list/[id]/edit/route";
 import { ClearCheckedRequestBody } from "@/app/api/list/[id]/clear/route";
 import sharedListUtils from "@/utils/sharedListUtils";
+import { ItemSpinnerState } from "../itemSpinner";
 
+const LOADED_DURATION = 1500;
 
 export function useSharedList(listId: string) {
 
@@ -19,7 +21,8 @@ export function useSharedList(listId: string) {
     const [loading, setLoading] = useState(true);
     const [deletingList, setDeletingList] = useState(false)
     const [error, setError] = useState<string | null>(null);
-    const [pendingOperations, setPendingOperations] = useState<string[]>([])
+    const fulfilledOperationsTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
+    const [operations, setOperations] = useState<Map<string, {itemId: string | null}>>(new Map()) //TODO: update to bidirectional model (opid -> itemid, itemid -> opid)
 
     useChannel(`list:${listId}`, (message) => {
         handleMessage(message)
@@ -38,38 +41,102 @@ export function useSharedList(listId: string) {
         }
     }, [list])
 
-    const loadingItemIds = useMemo((): string[] => {
-        if(!list || pendingOperations.length === 0) return []
-
-        const ids: string[] = []
-
-        pendingOperations.forEach(po => {
-            const item = sortedList?.items?.find(item => item.opId === po)
-            if (item !== undefined && !ids.includes(item._id)){
-                ids.push(item._id)
+    const hasPendingOperations = useMemo(() => {
+        for(const [opId] of operations){
+            if(!fulfilledOperationsTimeoutsRef.current.has(opId)){
+                return true
             }
-        })
-        console.log("loadingIDs", ids)
+        }
+        return false
+    }, [operations])
 
-        return ids
-    }, [list, pendingOperations, sortedList])
+    const listItemsWithStatus = useMemo(() => {
+        const listWithStatus = list?.items.map(item => {
+            if (item.opId) {
+                return { ...item, status: "loading" };
+            }
+
+            let opInfo = null;
+            for(const [id, info] of operations){
+                if(info.itemId && info.itemId === item._id){
+                    opInfo = info
+                    break;
+                }
+            }
+
+            if (opInfo) {
+                return { ...item, status: "loaded" };
+            }
+
+            return { ...item, status: "none" };
+        });
+        return (listWithStatus ?? []) as (SharedListItem & {status: ItemSpinnerState})[]
+    }, [list, operations])
+
+    const operationFulfilled = (opId: string) => {
+        const opInfo = operations.get(opId)
+
+        if(opInfo){
+            clearTimeout(fulfilledOperationsTimeoutsRef.current.get(opId))
+        }else{
+            return
+        }
+
+        const timeoutId = setTimeout(() => {
+                fulfilledOperationsTimeoutsRef.current.delete(opId)
+                setOperations(prev => {
+                    const next = new Map(prev);
+                    next.delete(opId);
+                    return next;
+                });
+        }, LOADED_DURATION)
+
+        fulfilledOperationsTimeoutsRef.current.set(opId, timeoutId)
+        setOperations(prev => {
+            const next = new Map(prev);
+            const opInfo = prev.get(opId);
+            if (opInfo) next.set(opId, { itemId: opInfo.itemId });
+            return next;
+        });
+    }
+
+    const newOperation = (opId: string, itemId: string | null) => {
+        setOperations(prev => {
+            const next = new Map(prev);
+            next.set(opId, { itemId });
+            return next;
+        });
+    }
 
     function handleMessage(message: Message){
-        console.log("MESSAGE INBOUND (%s) --- V: %d", message.name, message.data.version)
+        const genericData = message.data as SLEvent
+        console.log("MESSAGE INBOUND (%s) --- V: %d", message.name, genericData.version)
         if(list?.version && list?.version >= message.data?.version){
             return; //ignore if incoming version is outdated
         }
 
-        if(!list?.version || list.version + 1 !== message.data?.version){
-            console.log("LIST VERSION MISMATCH current:%d inbound:%d", list?.version, message.data.version)
+        if(!list?.version || list.version + 1 !== genericData?.version){
+            console.log("LIST VERSION MISMATCH current:%d inbound:%d", list?.version, genericData.version)
             getList()
+            fulfilledOperationsTimeoutsRef.current.clear()
+            setOperations(new Map())
             return
         }
+
+        operationFulfilled(genericData.opId)
 
         if(message.name === "ADD"){
             const data = message.data as AddItemEvent
             const newItems = list.items?.filter(i => i.opId !== data.opId)
-            setPendingOperations(pendingOperations.filter(po => po !== data.opId))
+
+            if(operations.has(data.opId)){
+                setOperations(prev => {
+                    const next = new Map(prev);
+                    next.set(data.opId, { itemId: data.item.id});
+                    return next;
+                });
+            }
+            
 
             newItems?.push({
                 _id: data.item.id,
@@ -88,12 +155,7 @@ export function useSharedList(listId: string) {
         if(message.name === "CHECK"){
             const data = message.data as CheckItemEvent
 
-            if(pendingOperations.find(po => po === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
-                return
-            }
-
-            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, checked: true} : i)
+            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, checked: true, opId: undefined} : i)
             setList({
                 ...list,
                 items: newItems,
@@ -103,11 +165,6 @@ export function useSharedList(listId: string) {
 
         if(message.name === "DELETE"){
             const data = message.data as DeleteItemEvent
-
-            if(pendingOperations.find(po => po === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
-                return
-            }
 
             const newItems = list.items?.filter(i => i._id !== data.itemId)
             setList({
@@ -121,12 +178,7 @@ export function useSharedList(listId: string) {
         if(message.name === "MOVE"){
             const data = message.data as MoveItemEvent
 
-            if(pendingOperations.find(po => po === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
-                return
-            }
-
-            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, position: data.position} : i)
+            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, position: data.position, opId: undefined} : i)
             setList({
                 ...list,
                 items: newItems,
@@ -137,12 +189,7 @@ export function useSharedList(listId: string) {
         if(message.name === "EDIT"){
             const data = message.data as EditItemEvent
 
-            if(pendingOperations.find(po => po === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
-                return
-            }
-
-            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, text: data.text} : i)
+            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, text: data.text, opId: undefined} : i)
             setList({
                 ...list,
                 items: newItems,
@@ -152,12 +199,6 @@ export function useSharedList(listId: string) {
 
         if(message.name === "CLEAR"){
             const data = message.data as ClearCheckedEvent
-
-            if(pendingOperations.find(po => po === data.opId)){
-                setPendingOperations(pendingOperations.filter(po => po !== data.opId))
-                return
-            }
-
             const newItems = list?.items?.filter(i => !i.checked)
 
             setList({
@@ -207,8 +248,9 @@ export function useSharedList(listId: string) {
         if(!list) return
         const opId = getOpId()
         const itemPosition = list?.items?.reduce((max, current) => Math.max(max, current.position), 0) ?? 0 + 100
+        const tempId = "temp:"+opId
         const newItems = list?.items?.concat({
-            _id: "temp:"+opId,
+            _id: tempId,
             text,
             position: itemPosition,
             checked: false,
@@ -220,7 +262,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations([...pendingOperations, opId])
+        newOperation(opId, tempId)
 
         const body: AddItemRequestBody = {
             text,
@@ -231,7 +273,7 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId, list, pendingOperations]);
+    }, [listId, list, operations]);
 
     const moveItem = useCallback(async (itemId: string, itemIdBefore: string | null, itemIdAfter: string | null) => {
         if(!list) return
@@ -246,14 +288,14 @@ export function useSharedList(listId: string) {
             throw("Item not found or not persisted")
         }
 
-        const newItems = list?.items?.map(i => i._id === itemId ? {...i, position: newPosition} : i)
+        const newItems = list?.items?.map(i => i._id === itemId ? {...i, position: newPosition, opId: opId} : i)
 
         setList({
             ...list,
             items: newItems
         })
 
-        setPendingOperations([...pendingOperations, opId])
+        newOperation(opId, itemId)
 
         const body: MoveItemRequestBody = {
             itemId: itemId,
@@ -266,7 +308,7 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId, list, pendingOperations]);
+    }, [listId, list]);
 
     const checkItem = useCallback(async (itemId: string) => {
         if(!list) return
@@ -276,14 +318,14 @@ export function useSharedList(listId: string) {
             throw("Item not found or not persisted")
         }
 
-        const newItems = list?.items?.map(i => i._id === itemId ? {...i, checked: true} : i)
+        const newItems = list?.items?.map(i => i._id === itemId ? {...i, checked: true, opId: opId} : i)
 
         setList({
             ...list,
             items: newItems
         })
 
-        setPendingOperations([...pendingOperations, opId])
+        newOperation(opId, itemId)
 
         const body: CheckItemRequestBody = {
             itemId: itemId,
@@ -294,7 +336,7 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId, list, pendingOperations]);
+    }, [listId, list]);
 
     const deleteItem = useCallback(async (itemId: string) => {
         if(!list) return
@@ -311,7 +353,7 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations([...pendingOperations, opId])
+        newOperation(opId, itemId)
 
         const body: DeleteItemRequestBody = {
             itemId: itemId,
@@ -322,7 +364,7 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId, list, pendingOperations]);
+    }, [listId, list]);
 
 
     const editItem = useCallback(async (itemId: string, text: string) => {
@@ -334,13 +376,13 @@ export function useSharedList(listId: string) {
             throw("Item not found or not persisted")
         }
 
-        const newItems = list?.items?.map(i => i._id === itemId ? {...i, text} : i)
+        const newItems = list?.items?.map(i => i._id === itemId ? {...i, text, opId: opId} : i)
         setList({
             ...list,
             items: newItems
         })
 
-        setPendingOperations([...pendingOperations, opId])
+        newOperation(opId, itemId)
 
         const body: EditItemRequestBody = {
             itemId: itemId,
@@ -352,7 +394,7 @@ export function useSharedList(listId: string) {
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId, list, pendingOperations]);
+    }, [listId, list]);
 
 
 
@@ -366,22 +408,23 @@ export function useSharedList(listId: string) {
             items: newItems
         })
 
-        setPendingOperations([...pendingOperations, opId])
+        //TODO: track multi-item operations separately
+        //newOperation(opId, null)
 
         const body: ClearCheckedRequestBody = {
-            opId: getOpId()
+            opId: opId
         }
         await fetch(`/api/list/${listId}/clear`, {
         method: "POST",
         body: JSON.stringify(body),
         headers: { "Content-Type": "application/json" }
         });
-    }, [listId, list, pendingOperations]);
+    }, [listId, list]);
 
     return {
         list: sortedList,
-        loadingItemIds,
         loading,
+        hasPendingOperations,
         deletingList,
         error,
         deleteList,
@@ -391,7 +434,8 @@ export function useSharedList(listId: string) {
         editItem,
         deleteItem,
         checkItem,
-        clearChecked
+        clearChecked,
+        listItemsWithStatus
     };
     }
 

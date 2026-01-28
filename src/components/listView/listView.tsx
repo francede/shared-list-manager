@@ -236,7 +236,7 @@ export default function ListView(props: ListViewProps){
                     <div className={styles['drag-divider']}></div>
                 )}
 
-                <div ref={e => {itemRefs.current[i] = e}}>
+                <div ref={e => {itemRefs.current[i] = e}} style={{width:"100%"}}>
                     {draggedIndex === i &&
                         <div key={"placeholder"} ref={e => {itemRefs.current[i] = e}} className={getDragPlaceholderClassName()}>
                             <div className={styles['item-text']}>{item.text}</div>

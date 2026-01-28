@@ -12,13 +12,11 @@ import { useSession } from 'next-auth/react'
 import { useSharedList } from '@/components/hooks/useSharedList'
 import { UpdateMetadataRequestBody } from '@/app/api/services/sharedListRepository';
 import ListView, { ListViewItem } from '@/components/listView/listView';
-import { useSharedListWithLoadingStatus } from '@/components/hooks/useSharedListLoadingItems';
 
 export default function ListsContent(props: Props){
     const router = useRouter();
     const session = useSession();
-    const {list, addItem, editItem, deleteItem, checkItem, moveItem, deleteList, loadingItemIds, updateListMetadata, deletingList, clearChecked} = useSharedList(props.params.id);
-    const listItemsWithLoadingStatus = useSharedListWithLoadingStatus(list?.items ?? [], loadingItemIds)
+    const {list, addItem, editItem, deleteItem, checkItem, moveItem, deleteList, updateListMetadata, deletingList, clearChecked, hasPendingOperations, listItemsWithStatus} = useSharedList(props.params.id);
     const [itemIdToDelete, setItemIdToDelete] = useState<string | null>(null);
     const [newItemInput, setNewItemInput] = useState<string>('');
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
@@ -51,7 +49,7 @@ export default function ListsContent(props: Props){
     }
 
     const listViewItems = useMemo((): ListViewItem[] => {
-        return listItemsWithLoadingStatus?.map((item) => {
+        return listItemsWithStatus?.map((item) => {
             return {
                 id: item._id,
                 text: item.text,
@@ -59,8 +57,8 @@ export default function ListsContent(props: Props){
                 loadingState: item.status,
                 highlight: item._id === itemIdToDelete
             }
-        })
-    }, [list, itemIdToDelete, listItemsWithLoadingStatus])
+        }) ?? []
+    }, [list, itemIdToDelete, listItemsWithStatus])
 
     const itemWithIdClicked = (itemId: string) => {
         const item = list?.items?.find((i) => i._id === itemId);
@@ -89,9 +87,9 @@ export default function ListsContent(props: Props){
     }
 
     let getSavedText = () => {
-        return (<div className={styles['list-saved']}>{loadingItemIds.length === 0 || 1 === 2 ? 
-            <span>all changes saved</span> : 
-            <span>saving...<span className="material-symbols-outlined">check</span></span>
+        return (<div className={styles['list-saved-text']}>{hasPendingOperations ?
+            <span>saving changes...</span> : 
+            <><span>all changes saved</span><span className="material-symbols-outlined">check</span></>
         }</div>);
     }
 
@@ -120,7 +118,6 @@ export default function ListsContent(props: Props){
 
     return (
         <div className={styles['list-page']}>
-            <div>{itemIdToDelete}</div>
             {editListMetadataDialogOpen ? 
             <Dialog title='Edit List' close={() => {closeEditListDialog()}}>
                 <div className={styles['dialog-container']}>

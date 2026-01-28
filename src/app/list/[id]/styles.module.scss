@@ -81,15 +81,16 @@
         font-weight: bold;
     }
 
-    .list-owner, .list-saved > span{
+    .list-owner, .list-saved-text > span{
         font-size: small;
         font-weight: normal;
         color: grey;
     }
 
-    .list-saved{
+    .list-saved-text{
         display: flex;
         align-items: center;
+        flex-direction: row;
     }
 }
 
