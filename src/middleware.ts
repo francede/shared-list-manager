@@ -22,6 +22,7 @@ export async function middleware(request: NextRequest) {
     const email = await getUserEmail(request)
 
     const roles = await getUserRoles(listId, email, rule.requiredRole, request);
+    console.log("ROLES FOUND",roles)
     if (roles === null) return notFound("Error code 2002");
 
     if (!roleSatisfies(roles, rule.requiredRole)) {
@@ -53,8 +54,9 @@ async function getUserRoles(listId: string | null, email: string | null, require
         return ["authenticated"]
     }
 
+    console.log("GETTING ROLES", listId, email)
+
     const res = await fetch(`${request.nextUrl.origin}/api/list/${listId}/roles?listId=${listId}&email=${email}`);
-    console.log("ROLE REQUEST RESULT",res)
 
     if(res.status === 404) return null
 
