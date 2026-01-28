@@ -13,7 +13,7 @@ import { ClearCheckedRequestBody } from "@/app/api/list/[id]/clear/route";
 import sharedListUtils from "@/utils/sharedListUtils";
 import { ItemSpinnerState } from "../itemSpinner";
 
-const LOADED_DURATION = 1500;
+const LOADED_DURATION = 3000;
 
 export function useSharedList(listId: string) {
 

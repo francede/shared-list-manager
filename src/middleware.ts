@@ -54,6 +54,7 @@ async function getUserRoles(listId: string | null, email: string | null, require
     }
 
     const res = await fetch(`${request.nextUrl.origin}/api/list/${listId}/roles?listId=${listId}&email=${email}`);
+    console.log("ROLE REQUEST RESULT",res)
 
     if(res.status === 404) return null
 

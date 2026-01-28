@@ -86,6 +86,12 @@ export default function ListsContent(props: Props){
         moveItem(itemId, itemIdBefore, itemAfter?._id ?? null)
     }
 
+    const addItemClicked = () => {
+        if(newItemInput.length === 0) return
+        addItem(newItemInput)
+        setNewItemInput("")
+    }
+
     let getSavedText = () => {
         return (<div className={styles['list-saved-text']}>{hasPendingOperations ?
             <span>saving changes...</span> : 
@@ -194,8 +200,8 @@ export default function ListsContent(props: Props){
                             type='text'
                             value={newItemInput}
                             onChange={(e) => setNewItemInput(e.target.value)}
-                            onKeyDown={(e) => {if(e.key === 'Enter') addItem(newItemInput)}}></input>
-                        <button disabled={newItemInput.length === 0} onClick={() => addItem(newItemInput)}>+</button>
+                            onKeyDown={(e) => {if(e.key === 'Enter') addItemClicked()}}></input>
+                        <button disabled={newItemInput.length === 0} onClick={() => addItemClicked()}>+</button>
                     </div>
                 </>
             }

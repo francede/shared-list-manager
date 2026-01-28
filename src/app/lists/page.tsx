@@ -67,7 +67,6 @@ export default function Lists() {
         if(ownedLists.length === 0){
             return 'no owned lists'
         }
-        console.log(ownedLists)
         const ownedListsToView = ownedLists?.map(ownedList => {
             return {
                 text: ownedList.name ?? "UNDEFINED",
