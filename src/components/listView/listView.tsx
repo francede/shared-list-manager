@@ -223,7 +223,8 @@ export default function ListView(props: ListViewProps){
             left: itemWidth ? dragPosition.x - itemWidth / 2 : 0,
             zIndex: 1000,
             pointerEvents: "none",
-            cursor: "grabbing"
+            cursor: "grabbing",
+            width: itemWidth+"px"
         }
         return styles;
     }
