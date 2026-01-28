@@ -259,7 +259,7 @@ export default function ListView(props: ListViewProps){
                                 <button className="material-symbols-outlined" onClick={() => saveEdit()}>save</button>
                             </>
                         :
-                            <div className={styles['item-text']}>{item.text}</div>
+                            <div className={styles['item-text']}>{item.position}{"  " + item.text}</div>
                         }
                         <ItemSpinner spinningState={item.loadingState}></ItemSpinner>
                         <ListViewContextMenu className={getContextMenuClassName(i)} contextButtons={getContextButtons(item, i)} onOutsideClick={() => {contextMenuIndex === i ? closeContextMenu() : null}}></ListViewContextMenu>
@@ -282,6 +282,7 @@ export type ListViewItem = {
     checked: boolean
     highlight?: boolean,
     loadingState: ItemSpinnerState
+    position: number
 }
 
 export type ListViewContextMenuButton = {

@@ -17,7 +17,7 @@ const LOADED_DURATION = 1500;
 
 export function useSharedList(listId: string) {
 
-    const [list, setList] = useState<SharedList | null>(null);
+    const [list, _setList] = useState<SharedList | null>(null);
     const [loading, setLoading] = useState(true);
     const [deletingList, setDeletingList] = useState(false)
     const [error, setError] = useState<string | null>(null);
@@ -31,6 +31,10 @@ export function useSharedList(listId: string) {
     useEffect(() => {
         getList();
     }, [listId]);
+
+    const setList = (newList: SharedList) => {
+        _setList({...newList, items: newList.items.toSorted((a,b) => a.position - b.position)})
+    }
 
     const hasPendingOperations = useMemo(() => {
         for(const [opId] of operations){
@@ -61,8 +65,6 @@ export function useSharedList(listId: string) {
 
             return { ...item, status: "none" };
         })
-        .toSorted((a,b) => a.position - b.position);
-
         return (listWithStatus ?? []) as (SharedListItem & {status: ItemSpinnerState})[]
     }, [list, operations])
 
@@ -240,7 +242,7 @@ export function useSharedList(listId: string) {
     const addItem = useCallback(async (text: string) => {
         if(!list) return
         const opId = getOpId()
-        const itemPosition = list?.items?.reduce((max, current) => Math.max(max, current.position), 0) ?? 0 + 100
+        const itemPosition = (list?.items?.reduce((max, current) => Math.max(max, current.position), 0) ?? 0) + 100
         const tempId = "temp:"+opId
         const newItems = list?.items?.concat({
             _id: tempId,
@@ -272,8 +274,8 @@ export function useSharedList(listId: string) {
         if(!list) return
         const itemAfter = list?.items?.find(e => e._id === itemIdAfter)
         const itemBefore = list?.items?.find(e => e._id === itemIdBefore)
-
         const newPosition = sharedListUtils.calculatePosition(itemBefore, itemAfter);
+        
         const opId = getOpId()
         
         const item = list?.items?.find(e => e._id === itemId)
