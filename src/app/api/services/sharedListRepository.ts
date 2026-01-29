@@ -182,6 +182,33 @@ export async function updateSharedListCheckItem(listID: string, body: CheckItemR
     return true
 }
 
+export async function updateSharedListUncheckItem(listID: string, body: CheckItemRequestBody): Promise<boolean>{
+    await connect();
+
+    if (!body.itemId) return false
+    await sharedListModel.updateOne(
+        {_id: listID, "items._id": body.itemId},
+        {
+            $set: { "items.$.checked": false },
+            $inc: {version: 1}
+        }
+    )
+    const updated = await sharedListModel.findOne(
+        { _id: listID },
+    );
+
+    if(!updated) return false
+    
+    const event: UncheckItemEvent = {
+        itemId: body.itemId,
+        version: updated.version,
+        opId: body.opId
+    }
+
+    await ably.channels.get(`list:${listID}`).publish("UNCHECK", event)
+    return true
+}
+
 export async function updateSharedListDeleteItem(listID: string, body: DeleteItemRequestBody): Promise<boolean>{
     await connect();
 
@@ -342,6 +369,10 @@ export type AddItemEvent = {
 } & SLEvent
 
 export type CheckItemEvent = {
+    itemId: string
+} & SLEvent
+
+export type UncheckItemEvent = {
     itemId: string
 } & SLEvent
 

@@ -3,13 +3,14 @@
     flex-direction: column;
     gap: 8px;
     align-items: center;
+    width: 100%;
 }  
 
 .list-item{
     background-color: #eee;
+    border: 1px solid #eee;
     padding: 8px 12px;
     border-radius: 8px;
-    border: 1px solid #aaa;
     transition: background-color 0.5s;
     position: relative;
     display: flex;
@@ -19,6 +20,8 @@
     cursor: pointer;
     touch-action: none;
     min-width: 100px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .list-item:not(.edited):hover{

@@ -4,11 +4,10 @@ import { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
 import Spinner from '@/components/spinner';
 import { signIn, signOut, useSession } from 'next-auth/react';
-import '@/app/globalicons.css'
 import Dialog from '@/components/dialog';
 import utils from '@/utils/validationUtils';
 import { SharedList } from '../api/services/sharedListRepository';
-import { LinkListView, LinkListViewItem } from '@/components/listView/listView';
+import { LinkListView } from '@/components/listView/listView';
 
 
 export default function Lists() {
@@ -99,6 +98,10 @@ export default function Lists() {
         setNewListViewerInput('');
     }
 
+    const getCreateListButtonClassName = () => {
+        return [styles["create-list-button"], "material-symbols-outlined", "primary"].join(" ");
+    }
+
     return (
         <>
             {
@@ -150,15 +153,14 @@ export default function Lists() {
             
             
             <div className={styles['content-container']}>
-                <h3>My Lists</h3>
+                <h3 className={styles["lists-header"]}>My Lists</h3>
                 <div className={styles['list-container']}>{getOwnedLists()}</div>
-                
-                <h3>Viewable Lists</h3>
+                <div className={styles["content-divider"]}></div>
+                <h3 className={styles["lists-header"]}>Viewable Lists</h3>
                 <div className={styles['list-container']}>{getViewableLists()}</div>
-
-                <button onClick={() => openCreateListDialog()} style={{marginTop: "24px"}}>Create List</button>
             </div>
-            
+
+            <button onClick={() => openCreateListDialog()} className={getCreateListButtonClassName()}>add</button>
         </>
     )
 }

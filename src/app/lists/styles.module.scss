@@ -9,9 +9,10 @@
 .content-container{
     display: flex;
     flex-direction: column;
+    width: 100%;
+    margin-top: 36px;
     
     button{
-        width: fit-content;
         align-self: center;
         position: relative;
     }
@@ -20,18 +21,9 @@
 .list-container{
     display: flex;
     flex-direction: column;
-    gap: 12px;
     width: 100%;
     align-items: center;
 }
-
-.list-container > a{
-    width: 100%;
-    box-sizing: border-box;
-    justify-content: start;
-}
-
-
 
 .dialog-container{
     display: flex;
@@ -96,3 +88,34 @@
         gap: 8px;
     }
 }
+
+.create-list-button{
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+}
+
+.lists-header{
+    margin-left: 8px;
+    margin-top: 0px;
+}
+
+.content-divider{
+    height: 2px;
+    width: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 36px 0px;
+}
+
+ .content-divider::after{
+        background-color: #999;
+        content: '';
+        height: 2px;
+        width: 90%;
+    }

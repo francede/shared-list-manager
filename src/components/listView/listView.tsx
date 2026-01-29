@@ -241,6 +241,7 @@ export default function ListView(props: ListViewProps){
                     {draggedIndex === i &&
                         <div key={"placeholder"} ref={e => {itemRefs.current[i] = e}} className={getDragPlaceholderClassName()}>
                             <div className={styles['item-text']}>{item.text}</div>
+                            <ItemSpinner spinningState={item.loadingState}></ItemSpinner>
                         </div>
                     }
 
@@ -256,13 +257,16 @@ export default function ListView(props: ListViewProps){
 
                         {editIndex === i ? 
                             <>
-                                <input value={editInput} onChange={e => {setEditInput(e.target.value)}}></input>
+                                <input value={editInput} autoFocus onChange={e => {setEditInput(e.target.value)}} onKeyDown={(e) => {if(e.key === 'Enter') saveEdit()}}></input>
                                 <button className="material-symbols-outlined" onClick={() => saveEdit()}>save</button>
                             </>
                         :
-                            <div className={styles['item-text']}>{item.text}</div>
+                            <>
+                                <div className={styles['item-text']}>{item.text}</div>
+                                <ItemSpinner spinningState={item.loadingState}></ItemSpinner>
+                            </>
                         }
-                        <ItemSpinner spinningState={item.loadingState}></ItemSpinner>
+                        
                         <ListViewContextMenu className={getContextMenuClassName(i)} contextButtons={getContextButtons(item, i)} onOutsideClick={() => {contextMenuIndex === i ? closeContextMenu() : null}}></ListViewContextMenu>
                     </div>
                 </div>

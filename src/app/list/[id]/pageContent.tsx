@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react'
 import styles from './styles.module.scss'
-import '@/app/globalicons.css'
 import React from 'react';
 import Spinner from '@/components/spinner'
 import Dialog from '@/components/dialog'
@@ -16,7 +15,7 @@ import ListView, { ListViewItem } from '@/components/listView/listView';
 export default function ListsContent(props: Props){
     const router = useRouter();
     const session = useSession();
-    const {list, addItem, editItem, deleteItem, checkItem, moveItem, deleteList, updateListMetadata, deletingList, clearChecked, hasPendingOperations, listItemsWithStatus} = useSharedList(props.params.id);
+    const {list, addItem, editItem, deleteItem, checkItem, uncheckItem, moveItem, deleteList, updateListMetadata, deletingList, clearChecked, hasPendingOperations, listItemsWithStatus} = useSharedList(props.params.id);
     const [itemIdToDelete, setItemIdToDelete] = useState<string | null>(null);
     const [newItemInput, setNewItemInput] = useState<string>('');
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
@@ -183,8 +182,7 @@ export default function ListsContent(props: Props){
                 <>
                     <div className={styles['list-title-row']}>
                         <div className={styles['list-title-container']}>
-                            <span className={styles['list-title']}>{list?.name}</span>
-                            <span className={styles['list-owner']}>created by: {list.owner}</span>
+                            <h3>{list?.name}</h3>
                         </div>
                         {getSavedText()}
                     </div>
@@ -194,6 +192,7 @@ export default function ListsContent(props: Props){
                         onDelete={(itemId) => {deleteItem(itemId)}}
                         onEdit={(itemId, text) => {editItem(itemId, text)}}
                         onDrag={(itemId, itemIdBefore) => {itemDragged(itemId, itemIdBefore)}}
+                        onUndo={(itemId) => {uncheckItem(itemId)}}
                     ></ListView>
                     <div  className={styles['input-container']}>
                         <input enterKeyHint='enter'
@@ -201,7 +200,7 @@ export default function ListsContent(props: Props){
                             value={newItemInput}
                             onChange={(e) => setNewItemInput(e.target.value)}
                             onKeyDown={(e) => {if(e.key === 'Enter') addItemClicked()}}></input>
-                        <button disabled={newItemInput.length === 0} onClick={() => addItemClicked()}>+</button>
+                        <button disabled={newItemInput.length === 0} onClick={() => addItemClicked()} className='material-symbols-outlined' style={{width: "32px", height: "32px"}}>add</button>
                     </div>
                 </>
             }
