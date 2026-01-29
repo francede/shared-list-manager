@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react'
 import styles from './styles.module.scss'
-import '@/app/globalicons.css'
 import React from 'react';
 import Spinner from '@/components/spinner'
 import Dialog from '@/components/dialog'

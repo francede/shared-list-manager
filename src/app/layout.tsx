@@ -6,7 +6,6 @@ import { OPTIONS } from './api/auth/[...nextauth]/route'
 import SharedListSessionProvider from '@/components/providers/SharedListSessionProvider'
 import { AblyClientProvider } from '@/components/providers/AblyClientProvider'
 import styles from './layout.module.css'
-import { DynamicListChannelProvider } from '@/components/providers/DynamicListChannelProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -23,6 +22,15 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={styles["root-html"]}>
+      <head>
+        <link
+          rel="preload"
+          href="/fonts/MaterialSymbolsOutlined.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className={inter.className}>
         <SharedListSessionProvider session={session}>
           <AblyClientProvider>
