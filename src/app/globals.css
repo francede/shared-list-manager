@@ -1,24 +1,9 @@
-@font-face {
-  font-family: "Material Symbols Outlined";
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-  font-variation-settings: "FILL" 1, "wght" 400;
-  src: url("/fonts/MaterialSymbolsOutlined.woff2") format("woff2");
-}
-
-.material-symbols-outlined {
-  font-family: "Material Symbols Outlined";
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
-  line-height: 1;
-  display: inline-block;
-  white-space: nowrap;
-}
-
-* {
-    font-family: Arial, Helvetica, sans-serif;
+@import "./fonts.css";
+/*TODO: FIX THIS*/
+div:not(.material-symbols-outlined), a:not(.material-symbols-outlined), span:not(.material-symbols-outlined), button:not(.material-symbols-outlined) {
+    font-family: "Nunito";
+    font-weight: normal;
+    font-style: normal;
 }
 
 a, button{
@@ -67,5 +52,15 @@ a.primary:hover, button.primary:hover{
 input{
     padding: 6px;
     border-radius: 8px;
-    border: 2px solid #aaa;
+    border: 1px solid #aaa;
+}
+
+h1, h2, h3 {
+    font-family: "Poltawski";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    display: inline-block;
+    white-space: nowrap;
 }

@@ -182,8 +182,7 @@ export default function ListsContent(props: Props){
                 <>
                     <div className={styles['list-title-row']}>
                         <div className={styles['list-title-container']}>
-                            <span className={styles['list-title']}>{list?.name}</span>
-                            <span className={styles['list-owner']}>created by: {list.owner}</span>
+                            <h3>{list?.name}</h3>
                         </div>
                         {getSavedText()}
                     </div>
@@ -201,7 +200,7 @@ export default function ListsContent(props: Props){
                             value={newItemInput}
                             onChange={(e) => setNewItemInput(e.target.value)}
                             onKeyDown={(e) => {if(e.key === 'Enter') addItemClicked()}}></input>
-                        <button disabled={newItemInput.length === 0} onClick={() => addItemClicked()}>+</button>
+                        <button disabled={newItemInput.length === 0} onClick={() => addItemClicked()} className='material-symbols-outlined' style={{width: "32px", height: "32px"}}>add</button>
                     </div>
                 </>
             }
