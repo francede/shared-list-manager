@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, SLEvent, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
+import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, SLEvent, UncheckItemEvent, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
 import { useChannel } from "ably/react";
 import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";
@@ -12,6 +12,7 @@ import { EditItemRequestBody } from "@/app/api/list/[id]/edit/route";
 import { ClearCheckedRequestBody } from "@/app/api/list/[id]/clear/route";
 import sharedListUtils from "@/utils/sharedListUtils";
 import { ItemSpinnerState } from "../itemSpinner";
+import { UncheckItemRequestBody } from "@/app/api/list/[id]/uncheck/route";
 
 const LOADED_DURATION = 3000;
 
@@ -151,6 +152,17 @@ export function useSharedList(listId: string) {
             const data = message.data as CheckItemEvent
 
             const newItems = list.items?.map(i => i._id === data.itemId ? {...i, checked: true, opId: undefined} : i)
+            setList({
+                ...list,
+                items: newItems,
+                version: data.version
+            })
+        }
+
+        if(message.name === "UNCHECK"){
+            const data = message.data as UncheckItemEvent
+
+            const newItems = list.items?.map(i => i._id === data.itemId ? {...i, checked: false, opId: undefined} : i)
             setList({
                 ...list,
                 items: newItems,
@@ -333,6 +345,34 @@ export function useSharedList(listId: string) {
         });
     }, [listId, list]);
 
+    const uncheckItem = useCallback(async (itemId: string) => {
+        if(!list) return
+        const opId = getOpId()
+        const item = list?.items?.find(e => e._id === itemId)
+        if(!item || item.opId){
+            throw("Item not found or not persisted")
+        }
+
+        const newItems = list?.items?.map(i => i._id === itemId ? {...i, checked: false, opId: opId} : i)
+
+        setList({
+            ...list,
+            items: newItems
+        })
+
+        newOperation(opId, itemId)
+
+        const body: UncheckItemRequestBody = {
+            itemId: itemId,
+            opId
+        }
+        await fetch(`/api/list/${listId}/uncheck`, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: { "Content-Type": "application/json" }
+        });
+    }, [listId, list]);
+
     const deleteItem = useCallback(async (itemId: string) => {
         if(!list) return
 
@@ -429,6 +469,7 @@ export function useSharedList(listId: string) {
         editItem,
         deleteItem,
         checkItem,
+        uncheckItem,
         clearChecked,
         listItemsWithStatus
     };

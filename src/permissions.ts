@@ -37,7 +37,7 @@ export const PERMISSIONS: PermissionRule[] = [
 
   // Viewer permissions (add, edit, remove, clear, move)
   {
-    pattern: /^\/api\/list\/[^\/]+\/(add|edit|delete|clear|move|check)$/,
+    pattern: /^\/api\/list\/[^\/]+\/(add|edit|delete|clear|move|check|uncheck)$/,
     methods: ["POST"],
     authRequired: true
   },

@@ -241,6 +241,7 @@ export default function ListView(props: ListViewProps){
                     {draggedIndex === i &&
                         <div key={"placeholder"} ref={e => {itemRefs.current[i] = e}} className={getDragPlaceholderClassName()}>
                             <div className={styles['item-text']}>{item.text}</div>
+                            <ItemSpinner spinningState={item.loadingState}></ItemSpinner>
                         </div>
                     }
 
