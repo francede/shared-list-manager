@@ -6,6 +6,16 @@ div:not(.material-symbols-outlined), a:not(.material-symbols-outlined), span:not
     font-style: normal;
 }
 
+h1, h2, h3 {
+    font-family: "Poltawski";
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    display: inline-block;
+    white-space: nowrap;
+}
+
 a, button{
     text-decoration: none;
     color: #222;
@@ -55,12 +65,19 @@ input{
     border: 1px solid #aaa;
 }
 
-h1, h2, h3 {
-    font-family: "Poltawski";
-    font-weight: normal;
-    font-style: normal;
-    font-size: 24px;
-    line-height: 1;
-    display: inline-block;
-    white-space: nowrap;
+.content-divider{
+    height: 2px;
+    width: 100%;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 36px 0px;
 }
+
+ .content-divider::after{
+        background-color: #999;
+        content: '';
+        height: 2px;
+        width: 90%;
+    }
