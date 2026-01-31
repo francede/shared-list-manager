@@ -194,16 +194,17 @@ export default function ListsContent(props: Props){
                         onDrag={(itemId, itemIdBefore) => {itemDragged(itemId, itemIdBefore)}}
                         onUndo={(itemId) => {uncheckItem(itemId)}}
                     ></ListView>
-                    <div  className={styles['input-container']}>
-                        <input enterKeyHint='enter'
-                            type='text'
-                            value={newItemInput}
-                            onChange={(e) => setNewItemInput(e.target.value)}
-                            onKeyDown={(e) => {if(e.key === 'Enter') addItemClicked()}}></input>
-                        <button disabled={newItemInput.length === 0} onClick={() => addItemClicked()} className='material-symbols-outlined' style={{width: "32px", height: "32px"}}>add</button>
-                    </div>
+                    
                 </>
             }
+            <div  className={styles['input-container']}>
+                <input enterKeyHint='enter'
+                    type='text'
+                    value={newItemInput}
+                    onChange={(e) => setNewItemInput(e.target.value)}
+                    onKeyDown={(e) => {if(e.key === 'Enter') addItemClicked()}}></input>
+                <button disabled={newItemInput.length === 0} onClick={() => addItemClicked()} className='material-symbols-outlined' style={{width: "32px", height: "32px"}}>add</button>
+            </div>
         </div>
     )
 }
