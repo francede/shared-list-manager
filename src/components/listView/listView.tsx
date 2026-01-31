@@ -5,7 +5,6 @@ import styles from './listView.module.css'
 import React from 'react';
 import ItemSpinner, { ItemSpinnerState } from '../itemSpinner';
 
-
 export default function ListView(props: ListViewProps){
     const [contextMenuIndex, setContextMenuIndex] = useState<number | null>(null);
     const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -20,11 +19,12 @@ export default function ListView(props: ListViewProps){
     const dragTimeoutRef = useRef<number | null>(null);
     const dragOccurredRef = useRef(false)
     const touchStartPositionRef = useRef<{x: number, y:number, itemIndex: number} | null>(null)
+    const dragHandleXOffsetRef = useRef<number>(0)
 
     /* DRAG CONTROLS */
     const startDrag = (index: number, startX: number, startY: number) => {
         setDraggedIndex(index);
-        setDragPosition({x: startX, y: startY})
+        setDragPosition({x: startX - dragHandleXOffsetRef.current, y: startY})
         draggedIndexRef.current = index
         dragTimeoutRef.current = null
         dragOccurredRef.current = true
@@ -50,11 +50,26 @@ export default function ListView(props: ListViewProps){
         }, 0);
     }
 
+    const cancelDrag = () => {
+        if(!props.onDrag) return
+        if (dragTimeoutRef.current) {
+            clearTimeout(dragTimeoutRef.current);
+            dragTimeoutRef.current = null;
+        }
+
+        setDraggedIndex(null)
+        draggedIndexRef.current = null
+
+        setTimeout(() => { //Wait for click event to fire
+            dragOccurredRef.current = false;
+        }, 0);
+    }
+
     const updateDrag = (newX: number, newY: number) => {
         if(!props.onDrag || !itemRefs.current) return
         if(draggedIndexRef.current === null) return
 
-        setDragPosition({x: newX, y: newY})
+        setDragPosition({x: newX - dragHandleXOffsetRef.current, y: newY})
 
         for(let i = 0; i < itemRefs.current.length; i++){
             const rect = itemRefs.current[i]?.getBoundingClientRect();
@@ -125,66 +140,124 @@ export default function ListView(props: ListViewProps){
         setEditInput("");
     }
 
-    /* INPUT EVENTS */
-    const handlePointerMove = (e: React.PointerEvent) => {
-        if(e.pointerType === "mouse"){  
-            updateDrag(e.clientX, e.clientY);
-        }else{
-            if (!touchStartPositionRef.current) return;
-            e.preventDefault();
-            if(draggedIndexRef.current !== null){
-                updateDrag(e.clientX, e.clientY)
-                return
-            }
-            const DRAG_TOLERANCE = 10 //px
-            const dx = e.clientX - touchStartPositionRef.current.x
-            const dy = e.clientY - touchStartPositionRef.current.y
-            const distance = Math.hypot(dx, dy);
-            if(distance > DRAG_TOLERANCE){
-                startDrag(touchStartPositionRef.current.itemIndex, e.clientX, e.clientY);
-                closeContextMenu();
-            }
-        }
-    }
-
-    const handlePointerDown = (e: React.PointerEvent, index: number) => {
-        if(!props.onDrag || e.button !== 0 || editIndex) return
-        if((e.target as HTMLElement).closest('button, input, textarea, select, [contenteditable="true"]')){
-            return
-        }
-        e.preventDefault()
-        e.currentTarget.setPointerCapture(e.pointerId)
-        if(e.pointerType === "mouse"){
-            dragTimeoutRef.current = window.setTimeout(() => {
-                startDrag(index, e.clientX, e.clientY)
-            }, 100);
-        }else{
-            touchStartPositionRef.current = {
-                x: e.clientX,
-                y: e.clientY,
-                itemIndex: index
-            }
-            dragTimeoutRef.current = window.setTimeout(() => {
-                if(draggedIndexRef.current !== null) return
-                openContextMenu(index)
-            }, 350);
-        }
-    }
-
-    const handlePointerUp = (e: React.PointerEvent) => {
-        e.preventDefault()
-        const target = e.currentTarget as HTMLElement
-        target.releasePointerCapture(e.pointerId)
-        touchStartPositionRef.current = null
-        endDrag();
-    }
-
+    /* CLICK EVENTS */
     const handleClick = (itemId: string) => {
         if(dragOccurredRef.current) return
         endDrag();
         if(editIndex !== null) return
         props.onClick(itemId)
         closeContextMenu();
+    }
+
+    /* MOUSE EVENTS */
+    const handleMouseDown = (e: React.MouseEvent) => {
+        const target = e.target as HTMLElement;
+        const itemElement = target.closest('[data-index]') as HTMLElement | null;
+        if(!itemElement) return;
+        const index = Number(itemElement.dataset.index)
+
+        if(!props.onDrag || 
+            e.button !== 0 || 
+            editIndex ||
+            target.closest('button, input, textarea, select, [contenteditable="true"]')) return
+
+
+        dragTimeoutRef.current = window.setTimeout(() => {
+            startDrag(index, e.clientX, e.clientY)
+        }, 100);
+    }
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        updateDrag(e.clientX, e.clientY);
+    }
+
+    const handleMouseUp = (e: React.MouseEvent) => {
+        touchStartPositionRef.current = null
+        endDrag();
+    }
+
+    /* TOUCH EVENTS */
+    const handleTouchStart = (e: React.TouchEvent) => {
+        const target = e.target as HTMLElement;
+        const itemElement = target.closest('[data-index]') as HTMLElement | null;
+        const dragHandleElement = target.closest("[data-handle]") as HTMLElement | null;
+        if(!itemElement) return;
+        const index = Number(itemElement.dataset.index)
+
+        if(!props.onDrag || 
+            editIndex ||
+            target.closest('button, input, textarea, select, [contenteditable="true"]')) return
+
+        if(dragHandleElement){
+            dragHandleXOffsetRef.current = 
+                (dragHandleElement.getBoundingClientRect().left + dragHandleElement.getBoundingClientRect().width / 2) -
+                (itemElement.getBoundingClientRect().left + itemElement.getBoundingClientRect().width / 2)
+        }
+
+        touchStartPositionRef.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+            itemIndex: index
+        }
+
+        if(!touchStartPositionRef.current) return;
+        if(draggedIndexRef.current !== null) return
+
+        startDrag(index, e.touches[0].clientX, e.touches[0].clientY)
+
+    }
+
+    const handleContainerTouchStart = (e: React.TouchEvent) => {
+        const target = e.target as HTMLElement;
+        const itemElement = target.closest('[data-index]') as HTMLElement | null;
+        if(!itemElement) return;
+        const index = Number(itemElement.dataset.index)
+
+        touchStartPositionRef.current = {
+            x: e.touches[0].clientX,
+            y: e.touches[0].clientY,
+            itemIndex: index
+        }
+
+        dragTimeoutRef.current = window.setTimeout(() => {
+            if(!touchStartPositionRef.current) return;
+            if(draggedIndexRef.current !== null) return
+
+            openContextMenu(index)
+        }, 500);
+    }
+
+    const handleContainerTouchMove = (e: React.TouchEvent) => {
+        if (!touchStartPositionRef.current) return;
+        const DRAG_TOLERANCE = 10 //px
+        const dx = e.touches[0].clientX - touchStartPositionRef.current.x
+        const dy = e.touches[0].clientY - touchStartPositionRef.current.y
+        const distance = Math.hypot(dx, dy);
+        if(distance > DRAG_TOLERANCE){
+            closeContextMenu();
+        }
+    }
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        if (!touchStartPositionRef.current) return;
+        if(draggedIndexRef.current !== null){
+            updateDrag(e.touches[0].clientX, e.touches[0].clientY)
+            return
+        }
+        const DRAG_TOLERANCE = 10 //px
+        const dx = e.touches[0].clientX - touchStartPositionRef.current.x
+        const dy = e.touches[0].clientY - touchStartPositionRef.current.y
+        const distance = Math.hypot(dx, dy);
+        if(distance > DRAG_TOLERANCE){
+            closeContextMenu();
+            cancelDrag();
+        }
+    }
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+        touchStartPositionRef.current = null
+        dragHandleXOffsetRef.current = 0
+        endDrag();
     }
  
     /* CSS CLASS NAMES AND STYLES*/
@@ -222,7 +295,6 @@ export default function ListView(props: ListViewProps){
             top: itemHeight ? dragPosition.y - itemHeight / 2 : 0,
             left: itemWidth ? dragPosition.x - itemWidth / 2 : 0,
             zIndex: 1000,
-            pointerEvents: "none",
             cursor: "grabbing",
             width: itemWidth+"px"
         }
@@ -230,7 +302,14 @@ export default function ListView(props: ListViewProps){
     }
 
     return(
-        <div className={styles['list-container']} ref={containerRef}>
+        <div className={styles['list-container']} ref={containerRef}
+            onMouseDown={(e) => {handleMouseDown(e)}}
+            onMouseMove={(e) => {handleMouseMove(e)}}
+            onMouseUp={(e) => {handleMouseUp(e)}}
+            onTouchStart={(e) => {handleContainerTouchStart(e)}}
+            onTouchMove={(e) => {handleContainerTouchMove(e)}}
+            onTouchEnd={(e) => {handleTouchEnd(e)}}>
+
             {props.list?.map((item, i) => 
                 <React.Fragment key={i}>
                 {insertionIndex === i && draggedIndex !== null && (
@@ -239,20 +318,17 @@ export default function ListView(props: ListViewProps){
 
                 <div ref={e => {itemRefs.current[i] = e}} style={{width:"100%"}}>
                     {draggedIndex === i &&
-                        <div key={"placeholder"} ref={e => {itemRefs.current[i] = e}} className={getDragPlaceholderClassName()}>
+                        <div key={"placeholder"} className={getDragPlaceholderClassName()}>
                             <div className={styles['item-text']}>{item.text}</div>
                             <ItemSpinner spinningState={item.loadingState}></ItemSpinner>
                         </div>
                     }
 
-                    <div key={i} 
-                        ref={(e: HTMLElement | null) => {itemRefs.current[i] = e}} 
+                    <div key={i}
+                        data-index={i}
                         className={getItemClassName(item,i)}
                         style={getDraggedItemStyles(i)}
                         onClick={() => handleClick(item.id)} 
-                        onPointerDown={(e) => {handlePointerDown(e,i)}}
-                        onPointerMove={(e) => {handlePointerMove(e)}}
-                        onPointerUp={(e) => {handlePointerUp(e)}}
                         onContextMenu={(e) => {handleContextMenu(e,i)}}>
 
                         {editIndex === i ? 
@@ -263,7 +339,14 @@ export default function ListView(props: ListViewProps){
                         :
                             <>
                                 <div className={styles['item-text']}>{item.text}</div>
-                                <ItemSpinner spinningState={item.loadingState}></ItemSpinner>
+                                <div className={styles['item-spinner-container']}
+                                    onTouchStart={(e) => {handleTouchStart(e)}}
+                                    onTouchMove={(e) => {handleTouchMove(e)}}
+                                    onTouchEnd={(e) => {handleTouchEnd(e)}}
+                                    data-handle>
+                                    <ItemSpinner spinningState={item.loadingState} noneIcon='drag_indicator'></ItemSpinner>
+                                </div>
+                                
                             </>
                         }
                         

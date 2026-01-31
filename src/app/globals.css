@@ -75,9 +75,9 @@ input{
     margin: 36px 0px;
 }
 
- .content-divider::after{
-        background-color: #999;
-        content: '';
-        height: 2px;
-        width: 90%;
-    }
+.content-divider::after{
+    background-color: #999;
+    content: '';
+    height: 2px;
+    width: 90%;
+}

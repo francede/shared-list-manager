@@ -155,7 +155,7 @@ export default function Lists() {
             <div className={styles['content-container']}>
                 <h3 className={styles["lists-header"]}>My Lists</h3>
                 <div className={styles['list-container']}>{getOwnedLists()}</div>
-                <div className={styles["content-divider"]}></div>
+                <div className="content-divider"></div>
                 <h3 className={styles["lists-header"]}>Viewable Lists</h3>
                 <div className={styles['list-container']}>{getViewableLists()}</div>
             </div>

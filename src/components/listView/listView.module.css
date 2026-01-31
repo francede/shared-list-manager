@@ -4,7 +4,11 @@
     gap: 8px;
     align-items: center;
     width: 100%;
-}  
+}
+
+.scroll-lock{
+    touch-action: none;
+}
 
 .list-item{
     background-color: #eee;
@@ -18,10 +22,13 @@
     justify-content: space-between;
     gap: 8px;
     cursor: pointer;
-    touch-action: none;
     min-width: 100px;
     width: 100%;
     box-sizing: border-box;
+}
+
+.item-spinner-container{
+    touch-action: none;
 }
 
 .list-item:not(.edited):hover{

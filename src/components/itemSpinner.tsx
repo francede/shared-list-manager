@@ -17,8 +17,14 @@ export default function ItemSpinner(props: ItemSpinnerProps){
     }
 
     const getCheckmarkStyles = () => {
-        const s = [styles["checkmark"], "material-symbols-outlined"]
+        const s = [styles["icon"], "material-symbols-outlined"]
         if(props.spinningState === "loading" || props.spinningState === "none") s.push(styles['invisible']);
+        return s.join(" ")
+    }
+
+    const getNoneIconStyles = () => {
+        const s = [styles["icon"], "material-symbols-outlined"]
+        if(props.spinningState === "loading" || props.spinningState === "loaded") s.push(styles['invisible']);
         return s.join(" ")
     }
 
@@ -27,8 +33,11 @@ export default function ItemSpinner(props: ItemSpinnerProps){
             <div className={getSpinnerStyles()}>
                 <div></div>
             </div>
-            <div className={styles["checkmark-container"]}>
+            <div className={styles["icon-container"]}>
                 <div className={getCheckmarkStyles()}>check</div>
+            </div>
+            <div className={styles["icon-container"]}>
+                <div className={getNoneIconStyles()}>{props.noneIcon ?? ""}</div>
             </div>
             
         </div>
@@ -41,4 +50,5 @@ export type ItemSpinnerState = "loading" | "loaded" | "none"
 
 export type ItemSpinnerProps = {
     spinningState: ItemSpinnerState
+    noneIcon?: string
 }

@@ -9,6 +9,7 @@ const meta = {
   },
   argTypes: {
     spinningState: { control: "radio", options: ["loading", "loaded", "none"] },
+    noneIcon: {control: "text"}
   },
 } satisfies Meta<typeof ItemSpinner>;
 
