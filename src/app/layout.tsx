@@ -30,6 +30,7 @@ export default async function RootLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        <link rel="icon" type="image/svg+xml" href="favicon.svg"></link>
       </head>
       <body className={inter.className}>
         <SharedListSessionProvider session={session}>

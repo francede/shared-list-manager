@@ -50,5 +50,5 @@ export type ItemSpinnerState = "loading" | "loaded" | "none"
 
 export type ItemSpinnerProps = {
     spinningState: ItemSpinnerState
-    noneIcon?: string
+    noneIcon: string | null
 }

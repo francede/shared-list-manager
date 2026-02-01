@@ -301,6 +301,9 @@ export default function ListView(props: ListViewProps){
         return styles;
     }
 
+    /* OTHER UTILS */
+    const isTouchDevice = typeof window !== undefined && window.matchMedia("(pointer: coarse").matches;
+
     return(
         <div className={styles['list-container']} ref={containerRef}
             onMouseDown={(e) => {handleMouseDown(e)}}
@@ -320,7 +323,7 @@ export default function ListView(props: ListViewProps){
                     {draggedIndex === i &&
                         <div key={"placeholder"} className={getDragPlaceholderClassName()}>
                             <div className={styles['item-text']}>{item.text}</div>
-                            <ItemSpinner spinningState={item.loadingState}></ItemSpinner>
+                            <ItemSpinner spinningState={item.loadingState} noneIcon={null}></ItemSpinner>
                         </div>
                     }
 
@@ -344,7 +347,7 @@ export default function ListView(props: ListViewProps){
                                     onTouchMove={(e) => {handleTouchMove(e)}}
                                     onTouchEnd={(e) => {handleTouchEnd(e)}}
                                     data-handle>
-                                    <ItemSpinner spinningState={item.loadingState} noneIcon='drag_indicator'></ItemSpinner>
+                                    <ItemSpinner spinningState={item.loadingState} noneIcon={isTouchDevice ? 'drag_indicator' : null}></ItemSpinner>
                                 </div>
                                 
                             </>
