@@ -11,8 +11,8 @@
 }
 
 .list-item{
-    background-color: #eee;
-    border: 1px solid #eee;
+    background-color: var(--secondary);
+    border: 1px solid var(--secondary); /*This is here for the border offset to align with dragged item*/
     padding: 8px 12px;
     border-radius: 8px;
     transition: background-color 0.5s;
@@ -32,14 +32,14 @@
 }
 
 .list-item:not(.edited):hover{
-    background-color: #ddd;
+    background-color: var(--secondary-dark);
 }
 
 .edited > button {
     padding: 6px;}
 
 .checked{
-    background-color: #ddd;
+    background-color: var(--secondary-dark);
 }
 
 .checked > .item-text{
@@ -51,7 +51,7 @@
 }
 
 .checked > .item-text::after{
-    background-color: black;
+    background-color: var(--secondary-ct);
     position: absolute;
     content: '';
     top: 40%;
@@ -64,12 +64,12 @@
     
 .highlight{
     transition: 0.5s;
-    color: red;
+    color: var(--warning);
 }
 
 .highlight > .item-text::after{
     transition: 0.5s;
-    background-color: red;
+    background-color: var(--warning);
 }
 
 .placeholder{
@@ -140,10 +140,10 @@
 .context-menu{
     display: flex;
     flex-direction: row;
-    border: 1px solid #aaa;
+    border: 1px solid var(--secondary-bg);
     border-radius: 12px;
     overflow: hidden;
-    background-color: #fff;
+    background-color: var(--primary-bg);
 }
 
 .context-menu > button{
@@ -151,11 +151,11 @@
     border-radius: 0px;
     background-color: transparent;
     position: relative;
-    color: #444;
+    color: var(--primary-bg-ct);
 }
 
 .context-menu > button:hover{
-    background-color: #ddd;
+    background-color: var(--primary-bg-dark);
 }
 
 .context-menu > button:not(:nth-child(1))::before{
@@ -164,5 +164,5 @@
     left: -0.5px;
     width: 1px;
     height: 75%;
-    background-color: #aaa;
+    background-color: var(--primary-bg-ct);
 }

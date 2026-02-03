@@ -1,9 +1,11 @@
 @import "./fonts.css";
+@import "./themes.css";
 /*TODO: FIX THIS*/
 div:not(.material-symbols-outlined), a:not(.material-symbols-outlined), span:not(.material-symbols-outlined), button:not(.material-symbols-outlined) {
     font-family: "Nunito";
     font-weight: normal;
     font-style: normal;
+    color: var(--primary-bg-ct)
 }
 
 h1, h2, h3 {
@@ -14,55 +16,72 @@ h1, h2, h3 {
     line-height: 1;
     display: inline-block;
     white-space: nowrap;
+    color: var(--primary-bg-ct)
 }
 
 a, button{
     text-decoration: none;
-    color: #222;
-    background-color: #eee;
+    background-color: var(--secondary);
+    color: var(--secondary-ct);
+    
     transition: all 0.1s;
-    padding: 6px 12px;
     border: none;
     border-radius: 6px;
-    display: flex !important;
+    padding: 6px 12px;
+
+    display: flex;
     justify-content: center;
     align-items: center;
 }
 
 a:hover, button:hover{
     cursor: pointer;
-    background-color: #ddd;
+    background-color: var(--secondary-dark);
+}
+
+button.icon, button.icon:hover{
+    background-color: transparent;
+    border-radius: 50%;
+    aspect-ratio: 1;
+    font-size: 36px;
+    padding: 0px;
+    color: var(--background-ct);
+}
+
+button.icon:hover{
+    color: var(--primary);
 }
 
 a:disabled, button:disabled{
-    background-color: #eee;
     cursor: initial;
-    color: #aaa;
+    color: var(--secondary-dark);
+    background-color: var(--secondary);
 }
 
 a.warning, button.warning{
-    background-color: #f32;
-    color: #fff;
+    background-color: var(--warning);
+    color: var(--warning-ct);
 }
 
 a.warning:hover, button.warning:hover{
-    background-color: #d11;
+    background-color: var(--warning-dark);
 }
 
 a.primary, button.primary{
-    background-color: #126278;
-    color: #fff;
+    background-color: var(--primary);
+    color: var(--primary-ct);
 }
-
+s
 a.primary:hover, button.primary:hover{
-    background-color: #0d4f61;
+    background-color: var(--primary-dark);
 }
-
 
 input{
     padding: 6px;
     border-radius: 8px;
-    border: 1px solid #aaa;
+    border: 1px solid var(--secondary-dark);
+    background-color: var(--primary-bg);
+    color: var(--primary-bg-ct)
 }
 
 .content-divider{
@@ -76,7 +95,8 @@ input{
 }
 
 .content-divider::after{
-    background-color: #999;
+    background-color: var(--primary-bg-ct);
+    opacity: 50%;
     content: '';
     height: 2px;
     width: 90%;

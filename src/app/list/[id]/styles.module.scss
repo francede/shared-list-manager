@@ -23,7 +23,6 @@
     flex-direction: column;
     border-radius: 8px;
     overflow: hidden;
-    border: 1px solid #aaa;
     transition: opacity 0.5s;    
 }
 
@@ -102,16 +101,16 @@
     gap: 12px;
     position: sticky;
     bottom: 24px;
-    background-color: #fff;
+    background-color: var(--secondary-bg);
     width: fit-content;
     padding: 8px;
-    box-shadow: 0px 2px 4px 2px #aaa;
+    box-shadow: 0px 2px 4px 2px var(--shadow);
     border-radius: 8px;
     margin-top: 18px;
     align-self: center;
 }
 
-.input-container>button{
+.input-container > button{
     font-size: larger;
 }
 

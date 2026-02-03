@@ -8,6 +8,7 @@ import Dialog from '@/components/dialog';
 import utils from '@/utils/validationUtils';
 import { SharedList } from '../api/services/sharedListRepository';
 import { LinkListView } from '@/components/listView/listView';
+import ButtonMenu from '@/components/buttonMenu';
 
 
 export default function Lists() {
@@ -18,6 +19,8 @@ export default function Lists() {
     const [newList, setNewList] = useState<{name: string, viewers: string[]}>({name: '', viewers: []});
     const [newListViewerInput, setNewListViewerInput] = useState<string>('');
     const [creatingList, setCreatingList] = useState<boolean>(false);
+    const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+    
 
     useEffect(() => {
         if(!session.data) {
@@ -144,11 +147,21 @@ export default function Lists() {
                 {
                 session.data ? 
                 <>
-                    Logged in as {session.data.user?.email}
-                    <button onClick={() => signOut()}><span className="material-symbols-outlined">logout</span>Logout</button>
+                    <button 
+                        className="material-symbols-outlined icon" 
+                        onClick={() => setSettingsOpen(true)}>account_circle</button>
+                    <ButtonMenu 
+                        open={settingsOpen} 
+                        buttons={[
+                            {text: "Settings", href: "/settings", icon: "settings"}, 
+                            {text: "Log Out", onClick: () => {signOut()}, icon: "logout"}]}
+                            text={session.data.user?.email ?? ""}
+                        onClose={() => {setSettingsOpen(false)}}>
+                    </ButtonMenu>
                 </> :
                 <button onClick={() => signIn()}><span className="material-symbols-outlined">login</span> Login</button>
                 }
+                
             </div>
             
             

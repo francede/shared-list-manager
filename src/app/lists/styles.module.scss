@@ -1,9 +1,11 @@
 .auth-container{
     display: flex;
     gap: 12px;
-    width: 100%;
+    width: auto;
     align-items: center;
     justify-content: flex-end;
+    position: relative;
+    margin: 12px;
 }
 
 .content-container{
@@ -101,4 +103,18 @@
 .lists-header{
     margin-left: 8px;
     margin-top: 0px;
+}
+
+.open{
+    opacity: 100%;
+    visibility: visible;
+}
+
+.menu-button{
+    justify-content: start;
+}
+
+.closed{
+    opacity: 0%;
+    visibility: hidden;
 }

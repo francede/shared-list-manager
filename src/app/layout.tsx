@@ -20,8 +20,12 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession(OPTIONS)
 
+  const getRootClassName = () => {
+    return [styles["root-html"], "light-theme"].join(" ")
+  }
+
   return (
-    <html lang="en" className={styles["root-html"]}>
+    <html lang="en" className={getRootClassName()}>
       <head>
         <link
           rel="preload"

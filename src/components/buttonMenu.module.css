@@ -1,0 +1,77 @@
+.menu{
+    position: absolute;
+    top: calc(10px + 100%);
+    right: 0%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    overflow: hidden;
+    transition: 0.35s;
+    
+    min-width: 150px;
+    padding: 12px 0px;
+    font-size: 14px;
+    border-radius: 8px;
+
+    background-color: var(--primary-bg);
+    box-shadow: 0px 2px 4px var(--shadow);
+    z-index: 100;
+}
+
+.menu *{
+    transition: 0.35s;
+}
+
+.button-container{
+    height: fit-content;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.text{
+    text-align: center;
+    margin-bottom: 8px;
+    padding: 0px 16px;
+}
+
+.menu > div > :is(button, a){
+    border-radius: 0px;
+    position: relative;
+    padding: 8px 4px;
+    font-size: 14px;
+    width: 100%;
+    justify-content: start;
+    box-sizing: border-box;
+    align-items: flex-end;
+    background-color: var(--primary-bg);
+}
+
+.menu > div > :is(button, a):hover{
+    background-color: var(--secondary-bg);
+}
+
+.menu > div > * > span{
+    font-size: 20px;
+    vertical-align: text-bottom;
+    margin-right: 4px;
+}
+
+.button-divider{
+    height: 1px;
+    width: 100%;
+    background-color: var(--secondary-bg-ct);
+    opacity: 40%;
+}
+
+.open{
+    opacity: 100%;
+    visibility: visible;
+}
+
+.closed{
+    opacity: 0%;
+    visibility: hidden;
+}

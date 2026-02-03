@@ -10,7 +10,7 @@ import {
 
 export type Theme = {
     name: string
-    colors: any //TODO
+    cssName: string
 }
 
 export type UserSettings = {
@@ -18,8 +18,13 @@ export type UserSettings = {
     language: "en" | "it" | "fi"
 }
 
+export const THEMES: Theme[] = [
+    {name: "Light", cssName: "light-theme"},
+    {name: "Dark", cssName: "dark-theme"}
+]
+
 const defaultUserSettings: UserSettings = {
-    theme: {name: "light", colors: "colors"},
+    theme: THEMES[0],
     language: "en"
 }
 
@@ -51,9 +56,7 @@ export function UserSettingsProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <UserSettingsContext.Provider
-      value={{ settings, updateSettings }}
-    >
+    <UserSettingsContext.Provider value={{ settings, updateSettings }}>
       {children}
     </UserSettingsContext.Provider>
   )
