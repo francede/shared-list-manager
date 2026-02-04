@@ -1,0 +1,38 @@
+{
+    "page":{
+        "list": {
+            "name": "nome",
+            "viewers": "editori",
+            "delete-list": "Elimina Lista",
+            "save-changes": "Salva le modifiche",
+            "edit": "Modifica",
+            "clear-checked": "Elmina i Segnati",
+            "saving-changes": "Salvando le modifiche...",
+            "all-changes-saved": "Tutte le modifiche salvati",
+            "confirm-delete-prompt": "Vuoi davvero eliminare definitivamente questa lista? Questa azione é permanente.",
+            "deleting-list": "Eliminando \"{{name}}\"",
+            "edit-list": "Modifica lista"
+        },
+        "lists": {
+            "no-owned-lists": "Non hai liste.",
+            "no-viewable-lists": "Nessuna lista visibile.",
+            "you-must-log-in-to-view-lists": "Devi fare il login per vedere liste.",
+            "name": "nome",
+            "viewers": "editori",
+            "creating-list": "Creando \"{{name}}\"",
+            "cancel": "Cancella",
+            "create": "Crea",
+            "log-in": "Log in",
+            "my-lists": "Mie Liste",
+            "viewable-lists": "Liste Visibili",
+            "settings": "Settaggi",
+            "log-out": "Log out",
+            "must-be-valid-name": "Il nome non può essere vuoto.",
+            "create-new-list": "Crea una nuova lista"
+        },
+        "settings": {
+            "language": "Lingua",
+            "theme": "Tema"
+        }
+    }
+}

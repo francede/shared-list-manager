@@ -1,0 +1,38 @@
+{
+    "page":{
+        "list": {
+            "name": "name",
+            "viewers": "viewers",
+            "delete-list": "Delete List",
+            "save-changes": "Save Changes",
+            "edit": "Edit",
+            "clear-checked": "Clear checked",
+            "saving-changes": "Saving changes...",
+            "all-changes-saved": "All changes saved",
+            "confirm-delete-prompt": "Are you sure you want to delete this list permanently? This action cannot be undone.",
+            "deleting-list": "Deleting \"{{name}}\"",
+            "edit-list": "Edit List"
+        },
+        "lists": {
+            "no-owned-lists": "No owned lists.",
+            "no-viewable-lists": "No viewable lists.",
+            "you-must-log-in-to-view-lists": "You must log in to view lists.",
+            "name": "name",
+            "viewers": "viewers",
+            "creating-list": "Creating \"{{name}}\"",
+            "cancel": "Cancel",
+            "create": "Create",
+            "log-in": "Log in",
+            "my-lists": "My Lists",
+            "viewable-lists": "Viewable Lists",
+            "settings": "Settings",
+            "log-out": "Log out",
+            "must-be-valid-name": "Must be a valid name.",
+            "create-new-list": "Create a New List"
+        },
+        "settings": {
+            "language": "Language",
+            "theme": "Theme"
+        }
+    }
+}

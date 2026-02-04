@@ -7,6 +7,7 @@ import React, {
   ReactNode,
   useRef,
 } from "react"
+import { Language } from "./TranslationProvider"
 
 export type Theme = {
     name: string
@@ -15,7 +16,7 @@ export type Theme = {
 
 export type UserSettings = {
     theme: Theme
-    language: "en" | "it" | "fi"
+    language: Language
 }
 
 export const LIGHT_THEME: Theme = {name: "Light", cssName: "light-theme"}
@@ -24,7 +25,7 @@ export const DARK_THEME: Theme = {name: "Dark", cssName: "dark-theme"}
 
 const defaultUserSettings: UserSettings = {
     theme: LIGHT_THEME,
-    language: "en"
+    language: "gb"
 }
 
 type UserSettingsContextValue = {

@@ -7,6 +7,7 @@ import SharedListSessionProvider from '@/components/providers/SharedListSessionP
 import styles from './layout.module.css'
 import { AblyClientProvider } from '@/components/providers/AblyClientProvider'
 import { UserSettingsProvider } from '@/components/providers/SettingsProvider'
+import { TranslationProvider } from '@/components/providers/TranslationProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -46,14 +47,17 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
         <link rel="icon" type="image/svg+xml" href="favicon.svg"></link>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/lipis/flag-icons@7.3.2/css/flag-icons.min.css" />
       </head>
       <body className={inter.className}>
         <SharedListSessionProvider session={session}>
           <AblyClientProvider>
             <UserSettingsProvider>
+              <TranslationProvider>
               <div className={styles['layout']}>
                 {children}
               </div>
+              </TranslationProvider>
             </UserSettingsProvider>
           </AblyClientProvider>
         </SharedListSessionProvider>

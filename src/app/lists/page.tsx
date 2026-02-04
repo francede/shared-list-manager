@@ -11,6 +11,7 @@ import { LinkListView } from '@/components/listView/listView';
 import ButtonMenu from '@/components/buttonMenu';
 import { useUserSettings } from '@/components/hooks/useUserSettings';
 import Toggle from '@/components/toggle';
+import { useTranslation } from '@/components/hooks/useTranslation';
 
 
 export default function Lists() {
@@ -23,6 +24,7 @@ export default function Lists() {
     const [creatingList, setCreatingList] = useState<boolean>(false);
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
     const {settings, updateTheme} = useUserSettings();
+    const { t } = useTranslation("page.lists.");
 
     useEffect(() => {
         if(!session.data) {
@@ -49,7 +51,7 @@ export default function Lists() {
 
     let createList = () => {
         if(!newList.name){
-            alert("Must be valid name");
+            alert(t("must-be-valid-name"));
             return;
         }
         setCreatingList(true);
@@ -69,7 +71,7 @@ export default function Lists() {
             return <Spinner></Spinner>;
         }
         if(ownedLists.length === 0){
-            return 'no owned lists'
+            return  session.data ? t("no-owned-lists") : t("you-must-log-in-to-view-lists")
         }
         const ownedListsToView = ownedLists?.map(ownedList => {
             return {
@@ -86,7 +88,7 @@ export default function Lists() {
             return <Spinner></Spinner>;
         }
         if(viewableLists.length === 0){
-            return 'no viewable lists'
+            return session.data ? t("no-viewable-lists") : t("you-must-log-in-to-view-lists")
         }
         const viewableListsToView = viewableLists?.map(viewableList => {
             return {
@@ -111,14 +113,14 @@ export default function Lists() {
         <>
             {
                 createListDialogOpen && 
-                <Dialog title='Create New List' close={() => {setCreateListDialogOpen(false)}}>
+                <Dialog title={t("create-new-list")} close={() => {setCreateListDialogOpen(false)}}>
                     <div className={styles['dialog-container']}>
                         <div className={styles['input-container']}>
                             <div  className={styles['input-row']}>
-                                name: <input placeholder='name' onChange={(e) => setNewList({...newList, name: e.target.value})}></input>
+                                {t("name")} <input placeholder='name' onChange={(e) => setNewList({...newList, name: e.target.value})}></input>
                             </div>
                             <div className={styles['input-row']}>
-                                viewers:
+                                {t("viewers")}
                                 <div className={styles['add-viewers-container']}>
                                     <input placeholder='email' value={newListViewerInput} onChange={(e) => {setNewListViewerInput(e.target.value)}} onKeyDown={(e) => {if(e.code === 'Enter') addViewer()}}></input>
                                     <button className="material-symbols-outlined" disabled={!utils.isValidEmail(newListViewerInput)} onClick={() => {addViewer()}}>add</button>
@@ -135,10 +137,10 @@ export default function Lists() {
                         </div>
 
                         {
-                        creatingList ? <div className={styles['spinner-container']}>Creating &quot;{newList.name}&quot;<Spinner></Spinner></div> :
+                        creatingList ? <div className={styles['spinner-container']}>{t("creating-list", {name: newList.name})}<Spinner></Spinner></div> :
                         <div className={styles['button-container']}>
-                            <button onClick={() => {setCreateListDialogOpen(false)}}>Cancel</button>
-                            <button className='primary' onClick={() => {createList()}}>Create</button>
+                            <button onClick={() => {setCreateListDialogOpen(false)}}>{t("cancel")}</button>
+                            <button className='primary' onClick={() => {createList()}}>{t("create")}</button>
                         </div>
                         }
                     </div>
@@ -149,7 +151,7 @@ export default function Lists() {
                 <Toggle 
                     toggled={settings.theme.name==="Light"}
                     onToggle={() => {updateTheme(settings.theme.name === "Light" ? "dark" : "light")}}
-                    iconOff='dark_modex'
+                    iconOff='dark_mode'
                     iconOn='light_mode'></Toggle>
                 {
                 session.data ? 
@@ -160,23 +162,23 @@ export default function Lists() {
                     <ButtonMenu 
                         open={settingsOpen} 
                         buttons={[
-                            {text: "Settings", href: "/settings", icon: "settings"}, 
-                            {text: "Log Out", onClick: () => {signOut()}, icon: "logout"}]}
+                            {text: t("settings"), href: "/settings", icon: "settings"}, 
+                            {text: t("log-out"), onClick: () => {signOut()}, icon: "logout"}]}
                             text={session.data.user?.email ?? ""}
                         onClose={() => {setSettingsOpen(false)}}>
                     </ButtonMenu>
                 </> :
-                <button onClick={() => signIn()}><span className="material-symbols-outlined">login</span> Login</button>
+                <button onClick={() => signIn()}><span className="material-symbols-outlined">login</span> {t("log-in")}</button>
                 }
                 
             </div>
             
             
             <div className={styles['content-container']}>
-                <h3 className={styles["lists-header"]}>My Lists</h3>
+                <h3 className={styles["lists-header"]}>{t("my-lists")}</h3>
                 <div className={styles['list-container']}>{getOwnedLists()}</div>
                 <div className="content-divider"></div>
-                <h3 className={styles["lists-header"]}>Viewable Lists</h3>
+                <h3 className={styles["lists-header"]}>{t("viewable-lists")}</h3>
                 <div className={styles['list-container']}>{getViewableLists()}</div>
             </div>
 

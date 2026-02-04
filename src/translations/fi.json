@@ -1,0 +1,38 @@
+{
+    "page":{
+        "list": {
+            "name": "nimi",
+            "viewers": "katsojat",
+            "delete-list": "Poista Lista",
+            "save-changes": "Tallenna Muutokset",
+            "edit": "Muokkaa",
+            "clear-checked": "Poista merkityt",
+            "saving-changes": "Muutoksia tallennetaan...",
+            "all-changes-saved": "Kaikki muutokset tallennettu",
+            "confirm-delete-prompt": "Oletko varma, että haluat poistaa listan lopullisesti? Poistoa ei voi perua.",
+            "deleting-list": "Poistetaan listaa \"{{name}}\"",
+            "edit-list": "Muokkaa Listaa"
+        },
+        "lists": {
+            "no-owned-lists": "Ei omia listoja.",
+            "no-viewable-lists": "Ei näkyviä listoja.",
+            "you-must-log-in-to-view-lists": "Sinun täytyy kirjautua sisään nähdäksesi listoja.",
+            "name": "nimi",
+            "viewers": "katsojat",
+            "creating-list": "Luodaan listaa \"{{name}}\"",
+            "cancel": "Takaisin",
+            "create": "Luo lista",
+            "log-in": "Kirjaudu sisään",
+            "my-lists": "Omat Listat",
+            "viewable-lists": "Näkyvät Listat",
+            "settings": "Asetukset",
+            "log-out": "Kirjaudu ulos",
+            "must-be-valid-name": "Listan nimi ei saa olla tyhjä.",
+            "create-new-list": "Luo uusi lista"
+        },
+        "settings": {
+            "language": "Kieli",
+            "theme": "Teema"
+        }
+    }
+}

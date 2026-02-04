@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import styles from './styles.module.scss'
 import React from 'react';
 import Spinner from '@/components/spinner'
@@ -11,6 +11,7 @@ import { useSession } from 'next-auth/react'
 import { useSharedList } from '@/components/hooks/useSharedList'
 import { UpdateMetadataRequestBody } from '@/app/api/services/sharedListRepository';
 import ListView, { ListViewItem } from '@/components/listView/listView';
+import { useTranslation } from '@/components/hooks/useTranslation';
 
 export default function ListsContent(props: Props){
     const router = useRouter();
@@ -23,6 +24,7 @@ export default function ListsContent(props: Props){
     const [listNameInput, setListNameInput] = useState<string>('');
     const [viewersInputList, setViewerInputList] = useState<string[] | null>(null);
     const [newViewerInput, setNewViewerInput] = useState<string>('');
+    const { t } = useTranslation("page.list.");
 
     const saveMetaData = () => {
         const body: UpdateMetadataRequestBody = {};
@@ -39,7 +41,7 @@ export default function ListsContent(props: Props){
     }
 
     const confirmDeleteList = () => {
-        if(!confirm("Are you sure you want to delete this list permanently? This actin cannot be undone.")){
+        if(!confirm(t("confirm-delete-prompt"))){
             return;
         }
         deleteList(() => {
@@ -93,8 +95,8 @@ export default function ListsContent(props: Props){
 
     let getSavedText = () => {
         return (<div className={styles['list-saved-text']}>{hasPendingOperations ?
-            <span>saving changes...</span> : 
-            <><span>all changes saved</span><span className="material-symbols-outlined">check</span></>
+            <span>{t("saving-changes")}</span> : 
+            <><span>{t("all-changes-saved")}</span><span className="material-symbols-outlined">check</span></>
         }</div>);
     }
 
@@ -106,7 +108,7 @@ export default function ListsContent(props: Props){
 
     let getSpinner = () => {
         if(deletingList){
-            return <div className={styles['spinner-container']}>Deleting &quot;{list?.name}&quot;<Spinner></Spinner></div>
+            return <div className={styles['spinner-container']}>{t("deleting-list", {name: list?.name ?? "undefined"})}<Spinner></Spinner></div>
         }
     }
 
@@ -124,14 +126,14 @@ export default function ListsContent(props: Props){
     return (
         <div className={styles['list-page']}>
             {editListMetadataDialogOpen ? 
-            <Dialog title='Edit List' close={() => {closeEditListDialog()}}>
+            <Dialog title={t("edit-list")} close={() => {closeEditListDialog()}}>
                 <div className={styles['dialog-container']}>
                         <div className={styles['input-container']}>
                             <div  className={styles['input-row']}>
-                                name: <input placeholder={list?.name} onChange={(e) => setListNameInput(e.target.value)}></input>
+                                {t("name")} <input placeholder={list?.name} onChange={(e) => setListNameInput(e.target.value)}></input>
                             </div>
                             <div className={styles['input-row']}>
-                                viewers:
+                                {t("viewers")}
                                 <div className={styles['add-viewers-container']}>
                                     <input placeholder='email' value={newViewerInput} onChange={(e) => {setNewViewerInput(e.target.value)}} onKeyDown={(e) => {if(e.code === 'Enter') addNewViewer()}}></input>
                                     <button className="material-symbols-outlined" disabled={!utils.isValidEmail(newViewerInput)} onClick={() => {addNewViewer()}}>add</button>
@@ -151,9 +153,9 @@ export default function ListsContent(props: Props){
                         getSpinner() ||
                         <div className={styles['button-container']}>
                             <div style={{position: 'relative'}}>
-                                <button className='warning' onClick={() => {confirmDeleteList()}}>Delete List</button>
+                                <button className='warning' onClick={() => {confirmDeleteList()}}>{t("delete-list")}</button>
                             </div>
-                            <button className='primary' onClick={() => saveMetaData()}>Save Changes</button>
+                            <button className='primary' onClick={() => saveMetaData()}>{t("save-changes")}</button>
                         </div>
                         }
                     </div>
@@ -170,10 +172,10 @@ export default function ListsContent(props: Props){
                     <button className={styles['menu-button']}
                         onClick={() => clearChecked()}>
                             <span className="material-symbols-outlined">delete_forever</span>
-                            Clear checked
+                            {t("clear-checked")}
                         </button>
                     {list?.owner === session.data?.user?.email ?
-                    <button className={styles['menu-button']} onClick={() => openEditListDialog()}><span className="material-symbols-outlined">edit</span>Edit</button>
+                    <button className={styles['menu-button']} onClick={() => openEditListDialog()}><span className="material-symbols-outlined">edit</span>{t("edit")}</button>
                     : null}                    
                 </div>
             </div>
