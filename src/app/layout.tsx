@@ -5,7 +5,6 @@ import { getServerSession } from 'next-auth'
 import { OPTIONS } from './api/auth/[...nextauth]/route'
 import SharedListSessionProvider from '@/components/providers/SharedListSessionProvider'
 import styles from './layout.module.css'
-import ClientProviders from './providers'
 import { AblyClientProvider } from '@/components/providers/AblyClientProvider'
 import { UserSettingsProvider } from '@/components/providers/SettingsProvider'
 
