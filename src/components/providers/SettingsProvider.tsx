@@ -47,8 +47,6 @@ export function UserSettingsProvider(props: UserSettingsProviderProps) {
     localStorage.setItem("user-settings", JSON.stringify(settings))
     props.onThemeChange && props.onThemeChange(settings.theme)
 
-    console.log(settings)
-
     const root = document.documentElement;
     let timeout = null;
 
