@@ -9,6 +9,8 @@ import utils from '@/utils/validationUtils';
 import { SharedList } from '../api/services/sharedListRepository';
 import { LinkListView } from '@/components/listView/listView';
 import ButtonMenu from '@/components/buttonMenu';
+import { useUserSettings } from '@/components/hooks/useUserSettings';
+import Toggle from '@/components/toggle';
 
 
 export default function Lists() {
@@ -20,7 +22,7 @@ export default function Lists() {
     const [newListViewerInput, setNewListViewerInput] = useState<string>('');
     const [creatingList, setCreatingList] = useState<boolean>(false);
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
-    
+    const {settings, updateTheme} = useUserSettings();
 
     useEffect(() => {
         if(!session.data) {
@@ -144,6 +146,11 @@ export default function Lists() {
             }
             
             <div className={styles['auth-container']}>
+                <Toggle 
+                    toggled={settings.theme.name==="Light"}
+                    onToggle={() => {updateTheme(settings.theme.name === "Light" ? "dark" : "light")}}
+                    iconOff='dark_modex'
+                    iconOn='light_mode'></Toggle>
                 {
                 session.data ? 
                 <>

@@ -4,8 +4,10 @@ import './globals.css'
 import { getServerSession } from 'next-auth'
 import { OPTIONS } from './api/auth/[...nextauth]/route'
 import SharedListSessionProvider from '@/components/providers/SharedListSessionProvider'
-import { AblyClientProvider } from '@/components/providers/AblyClientProvider'
 import styles from './layout.module.css'
+import ClientProviders from './providers'
+import { AblyClientProvider } from '@/components/providers/AblyClientProvider'
+import { UserSettingsProvider } from '@/components/providers/SettingsProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -20,12 +22,8 @@ export default async function RootLayout({
 }) {
   const session = await getServerSession(OPTIONS)
 
-  const getRootClassName = () => {
-    return [styles["root-html"], "light-theme"].join(" ")
-  }
-
   return (
-    <html lang="en" className={getRootClassName()}>
+    <html lang="en" className={styles["root-html"]}>
       <head>
         <link
           rel="preload"
@@ -39,9 +37,11 @@ export default async function RootLayout({
       <body className={inter.className}>
         <SharedListSessionProvider session={session}>
           <AblyClientProvider>
+            <UserSettingsProvider>
               <div className={styles['layout']}>
                 {children}
               </div>
+            </UserSettingsProvider>
           </AblyClientProvider>
         </SharedListSessionProvider>
       </body>

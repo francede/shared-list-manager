@@ -1,0 +1,40 @@
+.toggle{
+    height: 28px;
+    width: 54px;
+    border-radius: 18px;
+    border: 2px solid var(--primary-bg-ct);;
+    overflow: hidden;
+    background-color: var(--primary-bg);
+    cursor: pointer;
+    user-select: none;
+}
+
+.thumb-container{
+    display: flex;
+    width: fit-content;
+    position: relative;
+    transition: 0.5s;
+}
+
+.toggled{
+    transform: translateX(26px);
+}
+
+.thumb{
+    height: 24px;
+    width: 24px;
+    background-color: grey;
+    border-radius: 50%;
+    margin: 2px;
+    position: relative;
+}
+
+.thumb > :nth-child(1){
+    position: absolute;
+    left: 26px
+}
+
+.thumb > :nth-child(2){
+    position: absolute;
+    right: 26px
+}

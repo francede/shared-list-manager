@@ -1,11 +1,11 @@
 "use client"
 
-import {
+import React, {
   createContext,
-  useContext,
   useEffect,
   useState,
   ReactNode,
+  useRef,
 } from "react"
 
 export type Theme = {
@@ -18,46 +18,79 @@ export type UserSettings = {
     language: "en" | "it" | "fi"
 }
 
-export const THEMES: Theme[] = [
-    {name: "Light", cssName: "light-theme"},
-    {name: "Dark", cssName: "dark-theme"}
-]
+export const LIGHT_THEME: Theme = {name: "Light", cssName: "light-theme"}
+export const DARK_THEME: Theme = {name: "Dark", cssName: "dark-theme"}
+
 
 const defaultUserSettings: UserSettings = {
-    theme: THEMES[0],
+    theme: LIGHT_THEME,
     language: "en"
 }
 
 type UserSettingsContextValue = {
   settings: UserSettings
   updateSettings: (updates: Partial<UserSettings>) => void
+  updateTheme: (theme: "light" | "dark") => void
 }
 
 export const UserSettingsContext = createContext<UserSettingsContextValue | null>(null)
 
-export function UserSettingsProvider({ children }: { children: ReactNode }) {
-  const [settings, setSettings] = useState<UserSettings>(defaultUserSettings)
-
-  // Load from localStorage on mount
-  useEffect(() => {
+export function UserSettingsProvider(props: UserSettingsProviderProps) {
+  const [settings, setSettings] = useState<UserSettings>(() => {
     const stored = localStorage.getItem("user-settings")
-    if (stored) {
-      setSettings({ ...defaultUserSettings, ...JSON.parse(stored) })
-    }
-  }, [])
+    return stored ? { ...defaultUserSettings, ...JSON.parse(stored) } : defaultUserSettings
+  })
 
-  // Persist on change
+  const [themeInit, setThemeInit] = useState(false);
+
   useEffect(() => {
     localStorage.setItem("user-settings", JSON.stringify(settings))
+    props.onThemeChange && props.onThemeChange(settings.theme)
+
+    console.log(settings)
+
+    const root = document.documentElement;
+    let timeout = null;
+
+    if(themeInit){
+      root.classList.add("theme-transition")
+
+      timeout = setTimeout(() => {
+        root.classList.remove('theme-transition');
+      }, 250);
+    }
+
+    setThemeInit(true)
+    
+    root.classList.remove('light-theme', 'dark-theme');
+    root.classList.add(settings.theme.cssName)
+
+    if(timeout !== null) return () => clearTimeout(timeout)
   }, [settings])
 
   const updateSettings = (updates: Partial<UserSettings>) => {
     setSettings(prev => ({ ...prev, ...updates }))
   }
 
+  const updateTheme = (theme: "light" | "dark") => {
+    if(theme === "light"){
+      updateSettings({theme: LIGHT_THEME})
+    }
+    if(theme === "dark"){
+      updateSettings({theme: DARK_THEME})
+    }
+  }
+
+  if(!themeInit) return null
+
   return (
-    <UserSettingsContext.Provider value={{ settings, updateSettings }}>
-      {children}
+    <UserSettingsContext.Provider value={{ settings, updateSettings, updateTheme }}>
+      {props.children}
     </UserSettingsContext.Provider>
   )
+}
+
+export type UserSettingsProviderProps = {
+  children: ReactNode
+  onThemeChange?: (theme: Theme) => void
 }

@@ -3,6 +3,10 @@
     --ct-dark: #070707;
 }
 
+.theme-transition, .theme-transition * {
+    transition: background-color 200ms, color 200ms, border-color 200ms;
+}
+
 .light-theme{
     --primary-bg: #ffffff;
     --primary-bg-dark: #e9e9e9;

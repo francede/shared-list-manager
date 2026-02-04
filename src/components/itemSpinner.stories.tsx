@@ -19,5 +19,6 @@ type Story = StoryObj<typeof meta>;
 export const ItemSpinnerTest: Story = {
   args: {
     spinningState: "loading",
+    noneIcon: "check"
   },
 };
