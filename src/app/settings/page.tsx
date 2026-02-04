@@ -11,7 +11,6 @@ export default function Settings() {
 
     const getButtonClassName = (language: Language) => {
         const s = ["fi fi-"+language, styles["language-button"]];
-        console.log(language, settings.language)
         if(language === settings.language){
             s.push(styles["selected"])
         }

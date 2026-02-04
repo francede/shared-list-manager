@@ -9,7 +9,7 @@ import React, {
 } from "react"
 import { useUserSettings } from "../hooks/useUserSettings";
 
-type Translations = Record<string, string>;
+type Translations = Record<string, any>;
 
 type TranslationContextValue = {
     translations: Translations
@@ -17,6 +17,11 @@ type TranslationContextValue = {
 
 export const LANGUAGES = ["gb", "fi", "it"] as const
 export type Language = typeof LANGUAGES[number]
+const translationsMap: Record<Language, () => Promise<{ default: Translations }>> = {
+  gb: () => import("../../translations/gb.json"),
+  fi: () => import("../../translations/fi.json"),
+  it: () => import("../../translations/it.json"),
+} as const;
 
 const TranslationContext = createContext<TranslationContextValue | null>(null)
 
@@ -27,7 +32,7 @@ export function TranslationProvider(props: TranslationProviderProps) {
 
   useEffect(() => {
     async function loadTranslations() {
-      const data = await import(`../../translations/${settings.language}.json`);
+      const data = await translationsMap[settings.language]();
       setTranslations(data.default);
       setTranslationsInit(true)
     }

@@ -5,9 +5,8 @@ import React, {
   useEffect,
   useState,
   ReactNode,
-  useRef,
 } from "react"
-import { Language } from "./TranslationProvider"
+import { Language, LANGUAGES } from "./TranslationProvider"
 
 export type Theme = {
     name: string
@@ -39,6 +38,10 @@ export const UserSettingsContext = createContext<UserSettingsContextValue | null
 export function UserSettingsProvider(props: UserSettingsProviderProps) {
   const [settings, setSettings] = useState<UserSettings>(() => {
     const stored = localStorage.getItem("user-settings")
+    const parsed = stored && JSON.parse(stored)
+    if(!LANGUAGES.includes(parsed.language)){
+      return defaultUserSettings
+    }
     return stored ? { ...defaultUserSettings, ...JSON.parse(stored) } : defaultUserSettings
   })
 
