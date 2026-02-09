@@ -1,13 +1,17 @@
 .list-container{
     display: flex;
     flex-direction: column;
-    gap: 8px;
     align-items: center;
     width: 100%;
+    position: relative;
 }
 
 .scroll-lock{
     touch-action: none;
+}
+
+.list-item-wrapper{
+    width: 100%;
 }
 
 .list-item{
@@ -15,7 +19,7 @@
     border: 1px solid var(--secondary); /*This is here for the border offset to align with dragged item*/
     padding: 8px 12px;
     border-radius: 8px;
-    transition: background-color 0.5s;
+    transition: background-color 0.5s, transform 160ms ease;
     position: relative;
     display: flex;
     align-items: center;
@@ -25,6 +29,11 @@
     min-width: 100px;
     width: 100%;
     box-sizing: border-box;
+}
+
+.drop-animating{
+    position: relative;
+    z-index: 2;
 }
 
 .item-spinner-container{
@@ -87,10 +96,17 @@
     color: #00BFFF;
 }
 
+.drag-divider-container{
+    height: 8px;
+    width: calc(100% + 8px);
+    display: flex;
+    align-items: center;
+}
+
 .drag-divider{
     position: relative;
     height: 2px;
-    width: calc(100% + 16px);
+    width: 100%;
     background-color: #00BFFF;
 }
 

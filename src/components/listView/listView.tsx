@@ -1,6 +1,6 @@
 "use client"
 
-import { CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styles from './listView.module.css'
 import React from 'react';
 import ItemSpinner, { ItemSpinnerState } from '../itemSpinner';
@@ -15,6 +15,14 @@ export default function ListView(props: ListViewProps){
     const [insertionIndex, setInsertionIndex] = useState<number | null>(null);
     const insertionIndexRef = useRef<number | null>(null);
     const itemRefs = useRef<(HTMLElement | null)[]>([]);
+    const itemElsRef = useRef<Map<string, HTMLElement>>(new Map());
+    const prevRectsRef = useRef<Map<string, DOMRect>>(new Map());
+    const prevDraggedIndexRef = useRef<number | null>(null);
+    const dropFromRectsRef = useRef<Map<string, DOMRect> | null>(null);
+    const dropFromListKeyRef = useRef<string | null>(null);
+    const [dropAnimatingId, setDropAnimatingId] = useState<string | null>(null);
+    const dropAnimationTimeoutRef = useRef<number | null>(null);
+    const DROP_ANIMATION_MS = 160;
     const containerRef = useRef<(HTMLDivElement | null)>(null);
     const dragTimeoutRef = useRef<number | null>(null);
     const dragOccurredRef = useRef(false)
@@ -37,6 +45,27 @@ export default function ListView(props: ListViewProps){
             dragTimeoutRef.current = null;
         }
 
+        const draggedId =
+            draggedIndexRef.current !== null ? props.list[draggedIndexRef.current]?.id : null;
+        if (draggedId) {
+            const snapshot = new Map<string, DOMRect>();
+            props.list.forEach((item) => {
+                const el = itemElsRef.current.get(item.id);
+                if (!el) return;
+                snapshot.set(item.id, el.getBoundingClientRect());
+            });
+            dropFromRectsRef.current = snapshot;
+            dropFromListKeyRef.current = props.list.map((item) => item.id).join("|");
+
+            setDropAnimatingId(draggedId);
+            if (dropAnimationTimeoutRef.current) {
+                clearTimeout(dropAnimationTimeoutRef.current);
+            }
+            dropAnimationTimeoutRef.current = window.setTimeout(() => {
+                setDropAnimatingId(null);
+            }, DROP_ANIMATION_MS);
+        }
+
         if(draggedIndexRef.current !== null && insertionIndexRef.current !== null){
             const itemBefore = insertionIndexRef.current === 0 ? null : props.list[insertionIndexRef.current-1]
             props.onDrag(props.list[draggedIndexRef.current].id, itemBefore?.id ?? null)
@@ -44,6 +73,8 @@ export default function ListView(props: ListViewProps){
 
         setDraggedIndex(null)
         draggedIndexRef.current = null
+        setInsertionIndex(null)
+        insertionIndexRef.current = null
 
         setTimeout(() => { //Wait for click event to fire
             dragOccurredRef.current = false;
@@ -56,9 +87,17 @@ export default function ListView(props: ListViewProps){
             clearTimeout(dragTimeoutRef.current);
             dragTimeoutRef.current = null;
         }
+        if (dropAnimationTimeoutRef.current) {
+            clearTimeout(dropAnimationTimeoutRef.current);
+            dropAnimationTimeoutRef.current = null;
+        }
+        setDropAnimatingId(null);
+        dropFromRectsRef.current = null;
 
         setDraggedIndex(null)
         draggedIndexRef.current = null
+        setInsertionIndex(null)
+        insertionIndexRef.current = null
 
         setTimeout(() => { //Wait for click event to fire
             dragOccurredRef.current = false;
@@ -268,6 +307,7 @@ export default function ListView(props: ListViewProps){
         const s = [styles["list-item"]];
         if(item.checked) s.push(styles['checked']);
         if(item.highlight) s.push(styles['highlight']);
+        if(dropAnimatingId === item.id) s.push(styles['drop-animating']);
         return s.join(" ")
     }
 
@@ -304,6 +344,83 @@ export default function ListView(props: ListViewProps){
     /* OTHER UTILS */
     const isTouchDevice = typeof window !== undefined && window.matchMedia("(pointer: coarse").matches;
 
+    useLayoutEffect(() => {
+        const currentListKey = props.list.map((item) => item.id).join("|");
+        const hasDropSnapshot = dropFromRectsRef.current !== null;
+        const shouldAnimateDrop =
+            hasDropSnapshot && dropFromListKeyRef.current !== null && currentListKey !== dropFromListKeyRef.current;
+
+        const prevRects = shouldAnimateDrop ? dropFromRectsRef.current! : prevRectsRef.current;
+        const nextRects = new Map<string, DOMRect>();
+
+        props.list.forEach((item) => {
+            const el = itemElsRef.current.get(item.id);
+            if (!el) return;
+            nextRects.set(item.id, el.getBoundingClientRect());
+        });
+
+        const shouldAnimate = shouldAnimateDrop || (prevDraggedIndexRef.current !== null && draggedIndex === null);
+
+        if (shouldAnimate && prevRects.size > 0) {
+            props.list.forEach((item) => {
+                const el = itemElsRef.current.get(item.id);
+                const prev = prevRects.get(item.id);
+                const next = nextRects.get(item.id);
+                if (!el || !prev || !next) return;
+
+                const dy = prev.top - next.top;
+                const dx = prev.left - next.left;
+                if (dy === 0 && dx === 0) return;
+                el.style.transition = "none";
+                el.style.transform = `translate(${dx}px, ${dy}px)`;
+                requestAnimationFrame(() => {
+                    el.style.transition = "transform 160ms ease";
+                    el.style.transform = "";
+                });
+            });
+        }
+
+        prevRectsRef.current = nextRects;
+        prevDraggedIndexRef.current = draggedIndex;
+        if (shouldAnimateDrop && dropFromRectsRef.current) {
+            dropFromRectsRef.current = null;
+            dropFromListKeyRef.current = null;
+        }
+    }, [insertionIndex, props.list, draggedIndex]);
+
+    useEffect(() => {
+        if (draggedIndex === null) return;
+
+        const handleWindowTouchMove = (e: TouchEvent) => {
+            if (draggedIndexRef.current === null) return;
+            e.preventDefault();
+            updateDrag(e.touches[0].clientX, e.touches[0].clientY);
+        };
+
+        const handleWindowTouchEnd = () => {
+            if (draggedIndexRef.current === null) return;
+            endDrag();
+        };
+
+        window.addEventListener("touchmove", handleWindowTouchMove, { passive: false });
+        window.addEventListener("touchend", handleWindowTouchEnd);
+        window.addEventListener("touchcancel", handleWindowTouchEnd);
+
+        return () => {
+            window.removeEventListener("touchmove", handleWindowTouchMove);
+            window.removeEventListener("touchend", handleWindowTouchEnd);
+            window.removeEventListener("touchcancel", handleWindowTouchEnd);
+        };
+    }, [draggedIndex]);
+
+    useEffect(() => {
+        return () => {
+            if (dropAnimationTimeoutRef.current) {
+                clearTimeout(dropAnimationTimeoutRef.current);
+            }
+        };
+    }, []);
+
     return(
         <div className={styles['list-container']} ref={containerRef}
             onMouseDown={(e) => {handleMouseDown(e)}}
@@ -314,55 +431,66 @@ export default function ListView(props: ListViewProps){
             onTouchEnd={(e) => {handleTouchEnd(e)}}>
 
             {props.list?.map((item, i) => 
-                <React.Fragment key={i}>
-                {insertionIndex === i && draggedIndex !== null && (
-                    <div className={styles['drag-divider']}></div>
-                )}
-
-                <div ref={e => {itemRefs.current[i] = e}} style={{width:"100%"}}>
-                    {draggedIndex === i &&
-                        <div key={"placeholder"} className={getDragPlaceholderClassName()}>
-                            <div className={styles['item-text']}>{item.text}</div>
-                            <ItemSpinner spinningState={item.loadingState} noneIcon={null}></ItemSpinner>
-                        </div>
-                    }
-
-                    <div key={i}
-                        data-index={i}
-                        className={getItemClassName(item,i)}
-                        style={getDraggedItemStyles(i)}
-                        onClick={() => handleClick(item.id)} 
-                        onContextMenu={(e) => {handleContextMenu(e,i)}}>
-
-                        {editIndex === i ? 
-                            <>
-                                <input value={editInput} autoFocus onChange={e => {setEditInput(e.target.value)}} onKeyDown={(e) => {if(e.key === 'Enter') saveEdit()}}></input>
-                                <button className="material-symbols-outlined" onClick={() => saveEdit()}>save</button>
-                            </>
-                        :
-                            <>
-                                <div className={styles['item-text']}>{item.text}</div>
-                                <div className={styles['item-spinner-container']}
-                                    onTouchStart={(e) => {handleTouchStart(e)}}
-                                    onTouchMove={(e) => {handleTouchMove(e)}}
-                                    onTouchEnd={(e) => {handleTouchEnd(e)}}
-                                    data-handle>
-                                    <ItemSpinner spinningState={item.loadingState} noneIcon={isTouchDevice ? 'drag_indicator' : null}></ItemSpinner>
-                                </div>
-                                
-                            </>
-                        }
-                        
-                        <ListViewContextMenu className={getContextMenuClassName(i)} contextButtons={getContextButtons(item, i)} onOutsideClick={() => {contextMenuIndex === i ? closeContextMenu() : null}}></ListViewContextMenu>
+                <React.Fragment key={item.id}>
+                    
+                    <div className={styles['drag-divider-container']}>
+                        {insertionIndex === i && draggedIndex !== null && (
+                            <div className={styles['drag-divider']}></div>
+                        )}
                     </div>
-                </div>
+                    <div ref={e => {itemRefs.current[i] = e}} className={styles['list-item-wrapper']}>
+                        {draggedIndex === i &&
+                            <div key={"placeholder"} className={getDragPlaceholderClassName()}>
+                                <div className={styles['item-text']}>{item.text}</div>
+                                <ItemSpinner spinningState={item.loadingState} noneIcon={null}></ItemSpinner>
+                            </div>
+                        }
+
+                        <div key={item.id}
+                            ref={(el) => {
+                                if (el) itemElsRef.current.set(item.id, el);
+                                else itemElsRef.current.delete(item.id);
+                            }}
+                            data-index={i}
+                            className={getItemClassName(item,i)}
+                            style={getDraggedItemStyles(i)}
+                            onClick={() => handleClick(item.id)} 
+                            onContextMenu={(e) => {handleContextMenu(e,i)}}>
+
+                            {editIndex === i ? 
+                                <>
+                                    <input value={editInput} autoFocus onChange={e => {setEditInput(e.target.value)}} onKeyDown={(e) => {if(e.key === 'Enter') saveEdit()}}></input>
+                                    <button className="material-symbols-outlined" onClick={() => saveEdit()}>save</button>
+                                </>
+                            :
+                                <>
+                                    <div className={styles['item-text']}>{item.text}</div>
+                                    <div className={styles['item-spinner-container']}
+                                        onTouchStart={(e) => {handleTouchStart(e)}}
+                                        onTouchMove={(e) => {handleTouchMove(e)}}
+                                        onTouchEnd={(e) => {handleTouchEnd(e)}}
+                                        data-handle>
+                                        <ItemSpinner spinningState={item.loadingState} noneIcon={isTouchDevice ? 'drag_indicator' : null}></ItemSpinner>
+                                    </div>
+                                    
+                                </>
+                            }
+
+                            
+                            
+                            <ListViewContextMenu className={getContextMenuClassName(i)} contextButtons={getContextButtons(item, i)} onOutsideClick={() => {contextMenuIndex === i ? closeContextMenu() : null}}></ListViewContextMenu>
+                        </div>
+                    </div>
 
                 </React.Fragment>
             )}
 
-            {insertionIndex === itemRefs.current.length && draggedIndex !== null && (
-                <div className={styles['drag-divider']}></div>
-            )}
+            <div className={styles['drag-divider-container']}>
+                {insertionIndex === itemRefs.current.length && draggedIndex !== null && (
+                    <div className={styles['drag-divider']}></div>
+                )}
+            </div>
+
         </div>
     )
 }
