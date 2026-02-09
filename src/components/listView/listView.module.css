@@ -35,6 +35,12 @@
     background-color: var(--secondary-dark);
 }
 
+@media (hover: none) {
+    .list-item:not(.edited):hover{
+        background-color: var(--secondary);
+    }
+}
+
 .edited > button {
     padding: 6px;}
 
