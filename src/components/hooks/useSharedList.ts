@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, SLEvent, UncheckItemEvent, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
-import { useAbly, useChannel, usePresence, usePresenceListener } from "ably/react";
+import { useAbly, useChannel, useConnectionStateListener, usePresence, usePresenceListener } from "ably/react";
 import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";
 import { MoveItemRequestBody } from "@/app/api/list/[id]/move/route";
@@ -17,9 +17,6 @@ import { useUserSettings } from "./useUserSettings";
 import { Avatar } from "../providers/SettingsProvider";
 
 const LOADED_DURATION = 3000;
-type PresenceState = {
-    avatar: Avatar
-}
 
 export function useSharedList(listId: string) {
 
@@ -35,6 +32,13 @@ export function useSharedList(listId: string) {
     useChannel(`list:${listId}`, (message) => {
         handleMessage(message)
     });
+
+    useConnectionStateListener((stateChange) => {
+        if(stateChange.current === "connected" && stateChange.previous !== "connected"){
+            console.log("reconnected --- reloading list")
+            getList();
+        }
+    })
 
     usePresence(`list:${listId}`, settings.avatar);
 
@@ -495,7 +499,6 @@ export function useSharedList(listId: string) {
         uncheckItem,
         clearChecked,
         listItemsWithStatus,
-        reloadList: () => {getList()},
         presence
     };
     }
