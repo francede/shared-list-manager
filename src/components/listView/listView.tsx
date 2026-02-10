@@ -360,7 +360,6 @@ export default function ListView(props: ListViewProps){
         });
 
         const shouldAnimate = shouldAnimateDrop || (prevDraggedIndexRef.current !== null && draggedIndex === null);
-
         if (shouldAnimate && prevRects.size > 0) {
             props.list.forEach((item) => {
                 const el = itemElsRef.current.get(item.id);
@@ -373,6 +372,7 @@ export default function ListView(props: ListViewProps){
                 if (dy === 0 && dx === 0) return;
                 el.style.transition = "none";
                 el.style.transform = `translate(${dx}px, ${dy}px)`;
+                el.getBoundingClientRect();
                 requestAnimationFrame(() => {
                     el.style.transition = "transform 160ms ease";
                     el.style.transform = "";
@@ -475,13 +475,9 @@ export default function ListView(props: ListViewProps){
                                     
                                 </>
                             }
-
-                            
-                            
                             <ListViewContextMenu className={getContextMenuClassName(i)} contextButtons={getContextButtons(item, i)} onOutsideClick={() => {contextMenuIndex === i ? closeContextMenu() : null}}></ListViewContextMenu>
                         </div>
                     </div>
-
                 </React.Fragment>
             )}
 
@@ -490,7 +486,6 @@ export default function ListView(props: ListViewProps){
                     <div className={styles['drag-divider']}></div>
                 )}
             </div>
-
         </div>
     )
 }
@@ -563,7 +558,7 @@ export type ListViewContextMenuProps = {
 
 export function LinkListView(props: LinkListViewProps){
     return(
-        <div className={styles['list-container']}>
+        <div className={styles['list-container']} style={{gap: "8px"}}>
             {props.list?.map((item, i) => 
                 <a key={i} className={styles["list-item"]} href={item.href}>
                     <div className={styles["item-text"]}>{item.text}</div>
