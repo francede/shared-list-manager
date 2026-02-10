@@ -1,0 +1,43 @@
+.avatar-container{
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.avatar{
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: default;
+    user-select: none;
+    border: 3px solid var(--secondary-bg);
+    position: relative;
+    color: black !important;
+}
+
+.avatar:not(:first-child){
+  margin-right: -16px;
+  transition: 0.3s;
+}
+
+.avatar:not(:first-child):hover{
+  margin-right: -4px;
+}
+
+.tooltip-trigger{
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  position: absolute;
+  border-radius: 50%;
+}
+
+.tooltip-container{
+  pointer-events: none;
+}
+
+.tooltip-container > *{
+  right: 0;
+}

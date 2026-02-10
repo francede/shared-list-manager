@@ -32,7 +32,11 @@
         },
         "settings": {
             "language": "Lingua",
-            "theme": "Tema"
+            "theme": "Tema",
+            "avatar": "Avatar",
+            "avatar-color": "Colore dell'Avatar",
+            "initials": "Initziali",
+            "save-avatar": "Salva"
         }
     }
 }

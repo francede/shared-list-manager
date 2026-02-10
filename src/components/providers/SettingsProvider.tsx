@@ -16,6 +16,12 @@ export type Theme = {
 export type UserSettings = {
     theme: Theme
     language: Language
+    avatar: Avatar
+}
+
+export type Avatar = {
+    color: string
+    initial: string
 }
 
 export const LIGHT_THEME: Theme = {name: "Light", cssName: "light-theme"}
@@ -24,7 +30,11 @@ export const DARK_THEME: Theme = {name: "Dark", cssName: "dark-theme"}
 
 const defaultUserSettings: UserSettings = {
     theme: LIGHT_THEME,
-    language: "gb"
+    language: "gb",
+    avatar: {
+      color: "#FFFFFF",
+      initial: "X"
+    }
 }
 
 type UserSettingsContextValue = {

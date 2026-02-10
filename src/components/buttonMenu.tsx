@@ -30,27 +30,28 @@ export default function ButtonMenu(props: ButtonMenuProps){
     return (
         <div className={getMenuClassName()} ref={menuRef}>
             {props.text && <div className={styles["text"]}>{props.text}</div>}
+            {props.buttons && 
             <div className={styles["button-container"]}>
-            {props.buttons.map((button, i) => {
-                return (
-                <React.Fragment key={i}>
-                {button.href &&
-                    <a href={button.href}>
-                        {button.icon && <span className="material-symbols-outlined">{button.icon}</span>}
-                        {button.text}
-                    </a>
-                }
-                {!button.href && button.onClick &&
-                    <button onClick={() => {button.onClick && button.onClick()}}>
-                        {button.icon && <span className="material-symbols-outlined">{button.icon}</span>}
-                        {button.text}
-                    </button>
-                }
-                {i < props.buttons.length - 1 && <div className={styles["button-divider"]}/>}
-                </React.Fragment>
-                )
-            })}     
-            </div>       
+                {props.buttons.map((button, i) => {
+                    return (
+                    <React.Fragment key={i}>
+                    {button.href &&
+                        <a href={button.href}>
+                            {button.icon && <span className="material-symbols-outlined">{button.icon}</span>}
+                            {button.text}
+                        </a>
+                    }
+                    {!button.href && button.onClick &&
+                        <button onClick={() => {button.onClick && button.onClick()}}>
+                            {button.icon && <span className="material-symbols-outlined">{button.icon}</span>}
+                            {button.text}
+                        </button>
+                    }
+                    {props.buttons && i < props.buttons.length - 1 && <div className={styles["button-divider"]}/>}
+                    </React.Fragment>
+                    )
+                })}     
+            </div>}       
         </div>
     );
 
@@ -59,7 +60,7 @@ export default function ButtonMenu(props: ButtonMenuProps){
 export type ButtonMenuProps = {
     open: boolean
     text?: string
-    buttons: {
+    buttons?: {
         text: string
         icon?: string
         onClick?: () => void

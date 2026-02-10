@@ -4,14 +4,19 @@ import { useCallback } from "react";
 import { useTranslationContext } from "../providers/TranslationProvider";
 
 function getByPath(obj: any, path: string): string {
-    return path
+    const template = path
         .split(".")
-        .reduce((acc, key) => (acc ? acc[key] : undefined), obj) ?? path;
+        .reduce((acc, key) => (acc ? acc[key] : undefined), obj);
+    if(!template) console.error("No template found for %s", path);
+    return template ?? path;
 }
 
 function interpolate(template: string, params: Record<string, string | number>) {
-    return template.replace(/{{(\w+)}}/g, (_, key) =>
-        params[key] !== undefined ? String(params[key]) : `{{${key}}}`
+    return template.replace(/{{(\w+)}}/g, (_, key) => {
+        if(!params[key]) console.error("No param passed for template %s, {{%s}}}", template, key)
+        return params[key] !== undefined ? String(params[key]) : `{{${key}}}`
+    }
+        
     );
 }
 

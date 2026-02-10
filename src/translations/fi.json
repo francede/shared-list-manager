@@ -32,7 +32,11 @@
         },
         "settings": {
             "language": "Kieli",
-            "theme": "Teema"
+            "theme": "Teema",
+            "avatar": "Avatar",
+            "avatar-color": "Avatarin Väri",
+            "initials": "Alkukirjaimet",
+            "save-avatar": "Tallenna"
         }
     }
 }

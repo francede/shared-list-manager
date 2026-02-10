@@ -5,7 +5,7 @@
     position: relative;
 }
 
-.top-bar{
+.header{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
@@ -13,54 +13,11 @@
     margin-bottom: 16px;
 }
 
-.top-bar > div{
-    position: absolute;
-    top: calc(10px + 100%);
-    right: 0%;
-    width: 150px;
-    height: fit-content;
+.header-section{
     display: flex;
-    flex-direction: column;
-    border-radius: 8px;
-    overflow: hidden;
-    transition: opacity 0.5s;    
-}
-
-.top-bar > div > button{
-    border-radius: 0px;
-    position: relative;
-    text-align: left;
-    padding: 8px 16px;
-}
-
-.top-bar > div > button > span{
-    font-size: medium;
-    vertical-align: text-bottom;
-    margin-right: 4px;
-}
-
-.top-bar > div > button:not(:last-of-type)::after{
-    content : "";
-    position: absolute;
-    left: 12.5%;
-    bottom: 0;
-    height: 1px;
-    width: 75%;
-    border-bottom: 1px solid #aaa;
-}
-
-.open{
-    opacity: 100%;
-    visibility: visible;
-}
-
-.menu-button{
-    justify-content: start;
-}
-
-.closed{
-    opacity: 0%;
-    visibility: hidden;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
 }
 
 .list-title-row{

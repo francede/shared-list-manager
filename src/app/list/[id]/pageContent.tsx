@@ -12,11 +12,30 @@ import { useSharedList } from '@/components/hooks/useSharedList'
 import { UpdateMetadataRequestBody } from '@/app/api/services/sharedListRepository';
 import ListView, { ListViewItem } from '@/components/listView/listView';
 import { useTranslation } from '@/components/hooks/useTranslation';
+import AvatarPresence from '@/components/avatarPresence';
+import ButtonMenu from '@/components/buttonMenu';
+import { useUserSettings } from '@/components/hooks/useUserSettings';
+import Toggle from '@/components/toggle';
 
 export default function ListsContent(props: Props){
     const router = useRouter();
     const session = useSession();
-    const {list, addItem, editItem, deleteItem, checkItem, uncheckItem, moveItem, deleteList, updateListMetadata, deletingList, clearChecked, hasPendingOperations, listItemsWithStatus} = useSharedList(props.params.id);
+    const {
+        list, 
+        listItemsWithStatus,
+        loading,
+        addItem, 
+        editItem, 
+        deleteItem,
+        checkItem, 
+        uncheckItem, 
+        moveItem, 
+        clearChecked,
+        deleteList, 
+        updateListMetadata, 
+        deletingList, 
+        hasPendingOperations,
+        presence } = useSharedList(props.params.id);
     const [itemIdToDelete, setItemIdToDelete] = useState<string | null>(null);
     const [newItemInput, setNewItemInput] = useState<string>('');
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
@@ -25,6 +44,7 @@ export default function ListsContent(props: Props){
     const [viewersInputList, setViewerInputList] = useState<string[] | null>(null);
     const [newViewerInput, setNewViewerInput] = useState<string>('');
     const { t } = useTranslation("page.list.");
+    const {settings, updateTheme} = useUserSettings();
 
     const saveMetaData = () => {
         const body: UpdateMetadataRequestBody = {};
@@ -94,10 +114,14 @@ export default function ListsContent(props: Props){
     }
 
     let getSavedText = () => {
-        return (<div className={styles['list-saved-text']}>{hasPendingOperations ?
-            <span>{t("saving-changes")}</span> : 
-            <><span>{t("all-changes-saved")}</span><span className="material-symbols-outlined">check</span></>
-        }</div>);
+        let text = <><span>{t("all-changes-saved")}</span><span className="material-symbols-outlined">check</span></>
+        if(hasPendingOperations){
+            text = <span>{t("saving-changes")}</span>
+        }
+        if(loading){
+            text = <span>{t("reloading-list")}</span>
+        }
+        return (<div className={styles['list-saved-text']}>{text}</div>);
     }
 
     let addNewViewer = () => {
@@ -121,6 +145,14 @@ export default function ListsContent(props: Props){
     let closeEditListDialog = () => {
         if(deletingList) return;
         setEditListMetadataDialogOpen(false);
+    }
+
+    const getSettingsMenuButtons = () => {
+        const buttons = [{text: t("clear-checked"), icon: "delete_forever", onClick: () => {clearChecked()}}]
+        if(list?.owner === session.data?.user?.email){
+            buttons.push({text: t("edit"), icon: "edit", onClick: () => {openEditListDialog()}})
+        }
+        return buttons;
     }
 
     return (
@@ -161,23 +193,26 @@ export default function ListsContent(props: Props){
                     </div>
             </Dialog> : ''}
             
-            <div  className={styles['top-bar']}>
-                <a className="material-symbols-outlined" href='/lists'>arrow_back</a>
-                <button 
-                    className="material-symbols-outlined" 
-                    onClick={() => setSettingsOpen(true)}
-                    onBlur={() => setSettingsOpen(false)}>settings</button>
-
-                <div className={settingsOpen ? styles['open'] : styles['closed']}>
-                    <button className={styles['menu-button']}
-                        onClick={() => clearChecked()}>
-                            <span className="material-symbols-outlined">delete_forever</span>
-                            {t("clear-checked")}
-                        </button>
-                    {list?.owner === session.data?.user?.email ?
-                    <button className={styles['menu-button']} onClick={() => openEditListDialog()}><span className="material-symbols-outlined">edit</span>{t("edit")}</button>
-                    : null}                    
+            <div className={styles['header']}>
+                <div className={styles['header-section']}>
+                    <a className="material-symbols-outlined" href='/lists'>arrow_back</a>
+                    <Toggle 
+                        toggled={settings.theme.name==="Light"}
+                        onToggle={() => {updateTheme(settings.theme.name === "Light" ? "dark" : "light")}}
+                        iconOff='dark_mode'
+                        iconOn='light_mode'></Toggle>
                 </div>
+                
+                <div className={styles['header-section']}>
+                    <AvatarPresence avatars={presence}></AvatarPresence>
+                    <button 
+                        className="material-symbols-outlined" 
+                        onClick={() => setSettingsOpen(true)}>settings</button>
+                    <ButtonMenu buttons={getSettingsMenuButtons()} 
+                        open={settingsOpen} 
+                        onClose={() => setSettingsOpen(false)}></ButtonMenu>
+                </div>
+                
             </div>
             {
                 list === null ? <div style={{width: 'fit-content', alignSelf: 'center', padding: '20px'}}><Spinner></Spinner></div> : 

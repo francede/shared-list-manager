@@ -52,3 +52,27 @@ export const ButtonMenuTest: Story = {
     );
   },
 };
+
+export const ButtonMenuNoButtons: Story = {
+  args: {
+    open: true,
+    text: "anon.myous@email.email.com",
+    onClose: () => {},
+  },
+  render: (args) => {
+    const [open, setOpen] = React.useState(true);
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+
+    return (
+      <div style={{ position: "relative"}}>
+        <button ref={buttonRef} style={{}} onClick={() => setOpen((o) => !o)}>
+          Open menu
+        </button>
+
+        <ButtonMenu
+          {...args} open={open} onClose={() => {setOpen(false)}}
+        />
+      </div>
+    );
+  },
+};

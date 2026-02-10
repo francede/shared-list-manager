@@ -28,3 +28,41 @@
 .language-button.selected, .language-button:hover{
     border: 2px solid var(--primary-bg-ct);
 }
+
+.avatar-container{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 12px
+}
+
+.avatar-container > div{
+    display: flex;
+    width: 100%;
+    margin: 0 24px;
+    justify-content: space-between;
+}
+
+.avatar-container input[type="color"]{
+    height: 40px;
+    width: 40px;
+}
+
+.avatar-container input[type="text"]{
+    width: 40px;
+}
+
+.header{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    position: relative;
+    margin-bottom: 16px;
+}
+
+.header-section{
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    align-items: center;
+}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, SLEvent, UncheckItemEvent, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
-import { useChannel } from "ably/react";
+import { useAbly, useChannel, usePresence, usePresenceListener } from "ably/react";
 import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";
 import { MoveItemRequestBody } from "@/app/api/list/[id]/move/route";
@@ -13,8 +13,13 @@ import { ClearCheckedRequestBody } from "@/app/api/list/[id]/clear/route";
 import sharedListUtils from "@/utils/sharedListUtils";
 import { ItemSpinnerState } from "../itemSpinner";
 import { UncheckItemRequestBody } from "@/app/api/list/[id]/uncheck/route";
+import { useUserSettings } from "./useUserSettings";
+import { Avatar } from "../providers/SettingsProvider";
 
 const LOADED_DURATION = 3000;
+type PresenceState = {
+    avatar: Avatar
+}
 
 export function useSharedList(listId: string) {
 
@@ -24,14 +29,31 @@ export function useSharedList(listId: string) {
     const [error, setError] = useState<string | null>(null);
     const fulfilledOperationsTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
     const [operations, setOperations] = useState<Map<string, {itemId: string | null}>>(new Map()) //TODO: update to bidirectional model (opid -> itemid, itemid -> opid)
+    const ably = useAbly();
+    const { settings } = useUserSettings();
 
     useChannel(`list:${listId}`, (message) => {
         handleMessage(message)
     });
 
+    usePresence(`list:${listId}`, settings.avatar);
+
+    const { presenceData } = usePresenceListener<Avatar>(`list:${listId}`);
+
     useEffect(() => {
         getList();
     }, [listId]);
+
+    const presence = useMemo(() => {
+        console.log(presenceData)
+        return presenceData.flatMap((pm) => {
+            if(pm.clientId === ably.auth.clientId || 
+                pm.action === "absent" ||
+                pm.action === "leave"
+            ) return [];
+            return [{user: pm.clientId, avatar: {color: pm.data.color, initial: pm.data.initial}}]
+        })
+    }, [presenceData])
 
     const setList = (newList: SharedList) => {
         _setList({...newList, items: newList.items.toSorted((a,b) => a.position - b.position)})
@@ -224,6 +246,7 @@ export function useSharedList(listId: string) {
 
             const data = await res.json();
             setList(data)
+            setLoading(false)
         } catch (e) {
             setError("Failed to load list");
         }
@@ -471,7 +494,9 @@ export function useSharedList(listId: string) {
         checkItem,
         uncheckItem,
         clearChecked,
-        listItemsWithStatus
+        listItemsWithStatus,
+        reloadList: () => {getList()},
+        presence
     };
     }
 
