@@ -2,7 +2,7 @@
     font-family: "Material Symbols Outlined";
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: block;
     font-variation-settings: "FILL" 1, "wght" 400;
     src: url("/fonts/MaterialSymbolsOutlined.woff2") format("woff2");
 }
@@ -21,7 +21,7 @@
     font-family: "Poltawski";
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: block;
     src: url("/fonts/PoltawskiNowy-VariableFont_wght.ttf") format("truetype");
 }
 
@@ -29,6 +29,6 @@
     font-family: "Nunito";
     font-style: normal;
     font-weight: 400;
-    font-display: swap;
+    font-display: block;
     src: url("/fonts/Nunito-VariableFont_wght.ttf") format("truetype");
 }
