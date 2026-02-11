@@ -9,6 +9,7 @@
             "clear-checked": "Clear checked",
             "saving-changes": "Saving changes...",
             "all-changes-saved": "All changes saved",
+            "reloading-list": "Reloading list...",
             "confirm-delete-prompt": "Are you sure you want to delete this list permanently? This action cannot be undone.",
             "deleting-list": "Deleting \"{{name}}\"",
             "edit-list": "Edit List"

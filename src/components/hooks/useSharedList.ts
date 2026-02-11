@@ -33,13 +33,6 @@ export function useSharedList(listId: string) {
         handleMessage(message)
     });
 
-    useConnectionStateListener((stateChange) => {
-        if(stateChange.current === "connected" && stateChange.previous !== "connected"){
-            console.log("reconnected --- reloading list")
-            getList();
-        }
-    })
-
     usePresence(`list:${listId}`, settings.avatar);
 
     const { presenceData } = usePresenceListener<Avatar>(`list:${listId}`);
@@ -48,8 +41,32 @@ export function useSharedList(listId: string) {
         getList();
     }, [listId]);
 
+    useEffect(() => {
+        const handleAppResume = async () => {
+            console.log("Resume connection")
+            ably.connection.close()
+            ably.connection.connect()
+            getList()
+        }
+
+        const onResume = () => {
+            if (document.visibilityState === 'visible') {
+                handleAppResume()
+            }
+        }
+
+        document.addEventListener('visibilitychange', onResume)
+        window.addEventListener('focus', handleAppResume)
+        window.addEventListener('pageshow', handleAppResume)
+
+        return () => {
+            document.removeEventListener('visibilitychange', onResume)
+            window.removeEventListener('focus', handleAppResume)
+            window.removeEventListener('pageshow', handleAppResume)
+        }
+    }, [])
+
     const presence = useMemo(() => {
-        console.log(presenceData)
         return presenceData.flatMap((pm) => {
             if(pm.clientId === ably.auth.clientId || 
                 pm.action === "absent" ||
@@ -242,14 +259,14 @@ export function useSharedList(listId: string) {
         }
     }
 
-    async function getList(){
+    async function getList(ignoreOnMatchingVersion: boolean = false){
         try {
             setLoading(true);
             const res = await fetch(`/api/list/${listId}`);
             if (!res.ok) throw new Error("Failed to load list");
 
-            const data = await res.json();
-            setList(data)
+            const data = await res.json() as SharedList;
+            if(!ignoreOnMatchingVersion) setList(data)
             setLoading(false)
         } catch (e) {
             setError("Failed to load list");

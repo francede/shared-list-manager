@@ -9,6 +9,7 @@
             "clear-checked": "Poista merkityt",
             "saving-changes": "Muutoksia tallennetaan...",
             "all-changes-saved": "Kaikki muutokset tallennettu",
+            "reloading-list": "Listaa ladataan...",
             "confirm-delete-prompt": "Oletko varma, että haluat poistaa listan lopullisesti? Poistoa ei voi perua.",
             "deleting-list": "Poistetaan listaa \"{{name}}\"",
             "edit-list": "Muokkaa Listaa"

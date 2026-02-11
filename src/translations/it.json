@@ -9,6 +9,7 @@
             "clear-checked": "Elmina i Segnati",
             "saving-changes": "Salvando le modifiche...",
             "all-changes-saved": "Tutte le modifiche salvati",
+            "reloading-list": "Ricaricando lista...",
             "confirm-delete-prompt": "Vuoi davvero eliminare definitivamente questa lista? Questa azione é permanente.",
             "deleting-list": "Eliminando \"{{name}}\"",
             "edit-list": "Modifica lista"
