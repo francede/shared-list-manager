@@ -131,14 +131,27 @@ export function useSharedList(listId: string) {
     }, [ably, listId, settings.avatar]);
 
     const presence = useMemo(() => {
-        return presenceData.flatMap((pm) => {
-            if(pm.clientId === ably.auth.clientId || 
+        const dedupedByClientId = new Map<string, { user: string, avatar: Avatar }>();
+
+        for (const pm of presenceData) {
+            if (
+                pm.clientId === ably.auth.clientId ||
                 pm.action === "absent" ||
                 pm.action === "leave"
-            ) return [];
-            if (!pm.data?.color || !pm.data?.initial) return [];
-            return [{user: pm.clientId, avatar: {color: pm.data.color, initial: pm.data.initial}}]
-        })
+            ) {
+                continue;
+            }
+            if (!pm.data?.color || !pm.data?.initial) {
+                continue;
+            }
+
+            dedupedByClientId.set(pm.clientId, {
+                user: pm.clientId,
+                avatar: { color: pm.data.color, initial: pm.data.initial }
+            });
+        }
+
+        return Array.from(dedupedByClientId.values());
     }, [presenceData, ably.auth.clientId])
 
     const setList = (newList: SharedList) => {
