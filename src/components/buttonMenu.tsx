@@ -42,7 +42,7 @@ export default function ButtonMenu(props: ButtonMenuProps){
                         </a>
                     }
                     {!button.href && button.onClick &&
-                        <button onClick={() => {button.onClick && button.onClick()}}>
+                        <button onClick={() => {button.onClick && button.onClick(); props.onClose()}}>
                             {button.icon && <span className="material-symbols-outlined">{button.icon}</span>}
                             {button.text}
                         </button>
