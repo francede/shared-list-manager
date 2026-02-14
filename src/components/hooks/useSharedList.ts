@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, SLEvent, UncheckItemEvent, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
-import { useAbly, useChannel, useConnectionStateListener, usePresence, usePresenceListener } from "ably/react";
+import { useAbly, useChannel, usePresence, usePresenceListener } from "ably/react";
 import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";
 import { MoveItemRequestBody } from "@/app/api/list/[id]/move/route";
@@ -28,6 +28,7 @@ export function useSharedList(listId: string) {
     const [operations, setOperations] = useState<Map<string, {itemId: string | null}>>(new Map()) //TODO: update to bidirectional model (opid -> itemid, itemid -> opid)
     const ably = useAbly();
     const { settings } = useUserSettings();
+    const lastResumeAtRef = useRef<number>(0);
 
     useChannel(`list:${listId}`, (message) => {
         handleMessage(message)
@@ -43,9 +44,18 @@ export function useSharedList(listId: string) {
 
     useEffect(() => {
         const handleAppResume = async () => {
-            console.log("Resume connection")
-            ably.connection.close()
-            ably.connection.connect()
+            if (document.visibilityState === "hidden") return;
+
+            const now = Date.now();
+            if (now - lastResumeAtRef.current < 1000) return;
+            lastResumeAtRef.current = now;
+
+            const state = ably.connection.state;
+            if (state === "disconnected" || state === "suspended" || state === "failed" || state === "closed") {
+                console.log("Resume connection")
+                ably.connection.connect()
+            }
+
             getList()
         }
 
@@ -64,7 +74,7 @@ export function useSharedList(listId: string) {
             window.removeEventListener('focus', handleAppResume)
             window.removeEventListener('pageshow', handleAppResume)
         }
-    }, [])
+    }, [ably])
 
     const presence = useMemo(() => {
         return presenceData.flatMap((pm) => {
@@ -72,9 +82,10 @@ export function useSharedList(listId: string) {
                 pm.action === "absent" ||
                 pm.action === "leave"
             ) return [];
+            if (!pm.data?.color || !pm.data?.initial) return [];
             return [{user: pm.clientId, avatar: {color: pm.data.color, initial: pm.data.initial}}]
         })
-    }, [presenceData])
+    }, [presenceData, ably.auth.clientId])
 
     const setList = (newList: SharedList) => {
         _setList({...newList, items: newList.items.toSorted((a,b) => a.position - b.position)})
