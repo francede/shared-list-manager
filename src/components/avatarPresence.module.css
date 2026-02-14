@@ -1,6 +1,7 @@
 .avatar-container{
   display: flex;
   flex-direction: row-reverse;
+  width: fit-content;
 }
 
 .avatar{

@@ -12,6 +12,7 @@ import ButtonMenu from '@/components/buttonMenu';
 import { useUserSettings } from '@/components/hooks/useUserSettings';
 import Toggle from '@/components/toggle';
 import { useTranslation } from '@/components/hooks/useTranslation';
+import AvatarPresence from '@/components/avatarPresence';
 
 
 export default function Lists() {
@@ -166,6 +167,7 @@ export default function Lists() {
                             {text: t("log-out"), onClick: () => {signOut()}, icon: "logout"}]}
                             text={session.data.user?.email ?? ""}
                         onClose={() => {setSettingsOpen(false)}}>
+                        <div className={styles['button-menu-avatar-container']}><AvatarPresence avatars={[{avatar: settings.avatar}]}/></div>
                     </ButtonMenu>
                 </> :
                 <button onClick={() => signIn()}><span className="material-symbols-outlined">login</span> {t("log-in")}</button>

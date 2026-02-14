@@ -53,7 +53,7 @@ export default function Settings() {
                         {t("initials")} <input type="text" value={initialsInputValue} onChange={(e) => {setInitialsInputValue(e.target.value)}}></input>
                     </div>
                     <div>
-                        <AvatarPresence avatars={[{avatar: {color: colorInputValue, initial: initialsInputValue}, user: ably.auth.clientId}]}></AvatarPresence>
+                        <AvatarPresence avatars={[{avatar: {color: colorInputValue, initial: initialsInputValue}}]}></AvatarPresence>
                     </div>
                     
                     <button onClick={() => {updateSettings({avatar: {color: colorInputValue, initial: initialsInputValue}})}}>{t("save-avatar")}</button>

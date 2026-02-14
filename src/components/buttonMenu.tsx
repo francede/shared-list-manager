@@ -1,7 +1,7 @@
 "use client"
 
 import styles from './buttonMenu.module.css'
-import React, { useEffect, useRef } from 'react';
+import React, { ReactNode, useEffect, useRef } from 'react';
 
 export default function ButtonMenu(props: ButtonMenuProps){
     const menuRef = useRef<HTMLDivElement | null>(null)
@@ -29,6 +29,9 @@ export default function ButtonMenu(props: ButtonMenuProps){
 
     return (
         <div className={getMenuClassName()} ref={menuRef}>
+            {props.children &&
+                <div className={styles["children-container"]}>{props.children}</div>
+            }
             {props.text && <div className={styles["text"]}>{props.text}</div>}
             {props.buttons && 
             <div className={styles["button-container"]}>
@@ -60,6 +63,7 @@ export default function ButtonMenu(props: ButtonMenuProps){
 export type ButtonMenuProps = {
     open: boolean
     text?: string
+    children?: ReactNode
     buttons?: {
         text: string
         icon?: string

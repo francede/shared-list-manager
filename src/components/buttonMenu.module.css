@@ -76,3 +76,7 @@
     opacity: 0%;
     visibility: hidden;
 }
+
+.children-container{
+    width: 100%
+}

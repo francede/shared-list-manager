@@ -4,6 +4,7 @@ import { Avatar } from "./providers/SettingsProvider"
 import styles from './avatarPresence.module.css'
 import ButtonMenu from "./buttonMenu"
 import { useState } from "react"
+import { text } from "stream/consumers"
 
 export default function AvatarPresence(props: AvatarPresenceProps){
     const [avatarOpenIndex, setAvatarOpenIndex] = useState<number | null>(null)
@@ -22,7 +23,9 @@ export default function AvatarPresence(props: AvatarPresenceProps){
                         >
                     </div>
                     <div className={styles["tooltip-container"]}>
-                        <ButtonMenu open={i === avatarOpenIndex} text={a.user} onClose={() => setAvatarOpenIndex(null)}></ButtonMenu>
+                        {a.text &&
+                            <ButtonMenu open={i === avatarOpenIndex} text={a.text} onClose={() => setAvatarOpenIndex(null)}></ButtonMenu>
+                        }
                     </div>
                 </div>
             )}
@@ -32,5 +35,5 @@ export default function AvatarPresence(props: AvatarPresenceProps){
 
 
 export type AvatarPresenceProps = {
-    avatars: ({avatar: Avatar, user: string})[]
+    avatars: ({avatar: Avatar, text?: string})[]
 }
