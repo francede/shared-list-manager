@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, SLEvent, UncheckItemEvent, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
-import { useAbly, useChannel, usePresence, usePresenceListener } from "ably/react";
+import { useAbly, useChannel, usePresenceListener } from "ably/react";
 import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";
 import { MoveItemRequestBody } from "@/app/api/list/[id]/move/route";
@@ -33,8 +33,6 @@ export function useSharedList(listId: string) {
     useChannel(`list:${listId}`, (message) => {
         handleMessage(message)
     });
-
-    usePresence(`list:${listId}`, settings.avatar);
 
     const { presenceData } = usePresenceListener<Avatar>(`list:${listId}`);
 
@@ -75,6 +73,62 @@ export function useSharedList(listId: string) {
             window.removeEventListener('pageshow', handleAppResume)
         }
     }, [ably])
+
+    useEffect(() => {
+        const channel = ably.channels.get(`list:${listId}`);
+
+        const enterPresence = async () => {
+            try {
+                await channel.presence.enter(settings.avatar);
+            } catch {}
+        };
+
+        const leavePresence = async () => {
+            try {
+                await channel.presence.leave(settings.avatar);
+            } catch {}
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === "hidden") {
+                leavePresence();
+            } else if (document.visibilityState === "visible") {
+                enterPresence();
+            }
+        };
+
+        const onPageHide = () => {
+            leavePresence();
+        };
+
+        const onPageShow = () => {
+            enterPresence();
+        };
+
+        const onFocus = () => {
+            if (document.visibilityState === "visible") {
+                enterPresence();
+            }
+        };
+
+        // Ensure initial membership while visible.
+        if (document.visibilityState === "visible") {
+            enterPresence();
+        }
+
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        window.addEventListener("pagehide", onPageHide);
+        window.addEventListener("pageshow", onPageShow);
+        window.addEventListener("focus", onFocus);
+
+        return () => {
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+            window.removeEventListener("pagehide", onPageHide);
+            window.removeEventListener("pageshow", onPageShow);
+            window.removeEventListener("focus", onFocus);
+            leavePresence();
+        };
+    }, [ably, listId, settings.avatar]);
 
     const presence = useMemo(() => {
         return presenceData.flatMap((pm) => {
