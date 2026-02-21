@@ -1,5 +1,5 @@
 .root-html{
-    height: calc(100% - 24px);
+    height: calc(100dvh - 24px);
     background-color: var(--secondary-bg);
     padding: 0;
     display: flex;
