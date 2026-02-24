@@ -374,7 +374,7 @@ export function useSharedList(listId: string) {
     }
 
     const addItem = useCallback((text: string) => {
-        if(!list) return
+        if(!list) return Promise.reject();
         const opId = getOpId()
         const itemPosition = (list?.items?.reduce((max, current) => Math.max(max, current.position), 0) ?? 0) + 100
         const tempId = "temp:"+opId
