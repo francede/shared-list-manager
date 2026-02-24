@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from 'react'
+import { useMemo, useRef, useState, useTransition } from 'react'
 import styles from './styles.module.scss'
 import React from 'react';
 import Spinner from '@/components/spinner'
@@ -45,6 +45,7 @@ export default function ListsContent(props: Props){
     const [newViewerInput, setNewViewerInput] = useState<string>('');
     const { t } = useTranslation("page.list.");
     const {settings, updateTheme} = useUserSettings();
+    const pageRef = useRef<HTMLDivElement | null>(null);
 
     const saveMetaData = () => {
         const body: UpdateMetadataRequestBody = {};
@@ -109,7 +110,10 @@ export default function ListsContent(props: Props){
 
     const addItemClicked = () => {
         if(newItemInput.length === 0) return
-        addItem(newItemInput)
+        const p = addItem(newItemInput)
+        p.then(() => {
+            pageRef.current?.scrollIntoView({block: "end", behavior: "smooth"});
+        })
         setNewItemInput("")
     }
 
@@ -156,7 +160,7 @@ export default function ListsContent(props: Props){
     }
 
     return (
-        <div className={styles['list-page']}>
+        <div className={styles['list-page']} ref={pageRef}>
             {editListMetadataDialogOpen ? 
             <Dialog title={t("edit-list")} close={() => {closeEditListDialog()}}>
                 <div className={styles['dialog-container']}>
@@ -231,7 +235,6 @@ export default function ListsContent(props: Props){
                         onDrag={(itemId, itemIdBefore) => {itemDragged(itemId, itemIdBefore)}}
                         onUndo={(itemId) => {uncheckItem(itemId)}}
                     ></ListView>
-                    
                 </>
             }
             <div  className={styles['input-container']}>

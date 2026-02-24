@@ -154,7 +154,7 @@ export function useSharedList(listId: string) {
         return Array.from(dedupedByClientId.values());
     }, [presenceData, ably.auth.clientId])
 
-    const setList = (newList: SharedList) => {
+    const setList = (newList: SharedList) => { //TODO: change to functional setList to avoid stale states
         _setList({...newList, items: newList.items.toSorted((a,b) => a.position - b.position)})
     }
 
@@ -373,7 +373,7 @@ export function useSharedList(listId: string) {
         }
     }
 
-    const addItem = useCallback(async (text: string) => {
+    const addItem = useCallback((text: string) => {
         if(!list) return
         const opId = getOpId()
         const itemPosition = (list?.items?.reduce((max, current) => Math.max(max, current.position), 0) ?? 0) + 100
@@ -397,12 +397,20 @@ export function useSharedList(listId: string) {
             text,
             opId
         }
-        await fetch(`/api/list/${listId}/add`, {
-        method: "POST",
-        body: JSON.stringify(body),
-        headers: { "Content-Type": "application/json" }
+        void fetch(`/api/list/${listId}/add`, {
+            method: "POST",
+            body: JSON.stringify(body),
+            headers: { "Content-Type": "application/json" }
+        }).then((res) => {
+            if (!res.ok) {
+                setError("Failed to add list item");
+            }
+        }).catch(() => {
+            setError("Failed to add list item");
         });
-    }, [listId, list, operations]);
+
+        return Promise.resolve();
+    }, [listId, list]);
 
     const moveItem = useCallback(async (itemId: string, itemIdBefore: string | null, itemIdAfter: string | null) => {
         if(!list) return
@@ -552,8 +560,6 @@ export function useSharedList(listId: string) {
         headers: { "Content-Type": "application/json" }
         });
     }, [listId, list]);
-
-
 
     const clearChecked = useCallback(async () => {
         if(!list) return
