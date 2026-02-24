@@ -237,7 +237,7 @@ export default function ListsContent(props: Props){
                     ></ListView>
                 </>
             }
-            <div  className={styles['input-container']}>
+            <div  className={styles['add-item-container']}>
                 <input enterKeyHint='enter'
                     type='text'
                     value={newItemInput}
