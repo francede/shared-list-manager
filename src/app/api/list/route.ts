@@ -1,9 +1,9 @@
 import { createSharedList } from "@/app/api/services/sharedListRepository";
 import { NextRequest, NextResponse } from "next/server";
-import { userHasRole } from "../services/userRoleService";
+import { requestHasRole } from "../services/roleService";
 
 export async function POST(req: NextRequest) {
-    if(!await userHasRole(req, "authenticated")){
+    if(!await requestHasRole(req, "authenticated")){
         return NextResponse.json({message: 'unauthorized'}, {status: 403})
     }
 

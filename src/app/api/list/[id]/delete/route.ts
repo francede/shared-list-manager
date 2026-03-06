@@ -1,9 +1,9 @@
 import { updateSharedListDeleteItem } from "@/app/api/services/sharedListRepository";
-import { userHasRole } from "@/app/api/services/userRoleService";
+import { requestHasRole } from "@/app/api/services/roleService";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest, params: {params: {id: string}}) {
-    if(!await userHasRole(req, "editor")){
+    if(!await requestHasRole(req, "editor")){
         return NextResponse.json({message: 'unauthorized'}, {status: 403})
     }
 

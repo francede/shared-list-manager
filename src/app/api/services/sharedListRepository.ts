@@ -8,6 +8,7 @@ import { DeleteItemRequestBody } from "../list/[id]/delete/route";
 import { ClearCheckedRequestBody } from "../list/[id]/clear/route";
 import { EditItemRequestBody } from "../list/[id]/edit/route";
 import { MoveItemRequestBody } from "../list/[id]/move/route"
+import tokenUtils from "@/utils/tokenUtils";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,7 @@ const SharedListSchema = new mongoose.Schema<SharedList>({
     owner: String,
     viewers: [String],
     items: [SharedListItemSchema],
-    
+    shareTokens: [{token: String, permissions: String}]
 })
 
 const sharedListModel: mongoose.Model<SharedList> = (mongoose.models["SharedList"] as any || mongoose.model<SharedList>("SharedList", SharedListSchema , "SharedList")) as mongoose.Model<SharedList>;
@@ -55,6 +56,46 @@ export async function getSharedListsByViewer(viewer: string): Promise<SharedList
     return await sharedListModel.find({viewers: viewer}).exec();
 }
 
+export async function getSharedListIdByShareToken(token: string): Promise<{
+    _id: string
+} | null> {
+    await connect();
+    return await sharedListModel.findOne({
+        "shareTokens.token": token
+    }, {
+        _id: 1
+    })
+}
+
+export async function getSharedListNamesByShareTokens(tokens: string[]): Promise<{
+    name: string,
+    token: string
+}[]> {
+    await connect();
+    return await sharedListModel.aggregate<{ name: string; token: string }>([
+        {
+            $match: {
+                "shareTokens.token": { $in: tokens }
+            }
+        },
+        {
+            $unwind: "$shareTokens"
+        },
+        {
+            $match: {
+                "shareTokens.token": { $in: tokens }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                name: 1,
+                token: "$shareTokens.token"
+            }
+        }
+    ])
+}
+
 export async function createSharedList(name: string, owner: string, viewers: string[]){
     let list: SharedList = {
         _id: new ObjectId().toString(),
@@ -62,6 +103,7 @@ export async function createSharedList(name: string, owner: string, viewers: str
         owner: owner,
         viewers: viewers,
         items: [],
+        shareTokens: [],
         version: 1
     }
     await connect();
@@ -96,6 +138,36 @@ export async function updateSharedListMetadata(listId: string, body: UpdateMetad
     return true;
 }
 
+export async function createShareToken(listId: string, type: ShareTokenPermissions) {
+    await connect();
+
+    const shareToken: ShareToken = {
+        token: tokenUtils.generateToken(12),
+        permissions: type
+    }
+
+    await sharedListModel.updateOne(
+        {_id: listId},
+        {
+            $push: {shareTokens: shareToken},
+        }
+    )
+    return shareToken;
+}
+
+export async function revokeShareLink(listId: string, token: string) {
+    await connect();
+
+    await sharedListModel.updateOne(
+        {_id: listId},
+        {
+            $pull: {shareTokens: {token}},
+        }
+    )
+
+    return true;
+}
+
 export async function deleteSharedList(id: string){
     await connect();
     return await sharedListModel.findByIdAndDelete(id).exec();
@@ -126,7 +198,7 @@ export async function updateSharedListAddItem(listID: string, body: AddItemReque
         position: maxPosition + 100
     }
 
-    const r = await sharedListModel.updateOne(
+    await sharedListModel.updateOne(
         {_id: listID},
         {
             $push: {items: item},
@@ -344,6 +416,7 @@ export type SharedList = {
     owner: string
     viewers: string[]
     items: SharedListItem[]
+    shareTokens: ShareToken[]
 };
 
 export type SharedListItem = {
@@ -353,6 +426,13 @@ export type SharedListItem = {
     position: number
     opId?: string
 }
+
+export type ShareToken = {
+    token: string
+    permissions: ShareTokenPermissions
+}
+
+export type ShareTokenPermissions = "edit" | "view"
 
 export type SLEvent = {
     version: number

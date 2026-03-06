@@ -1,9 +1,9 @@
 import { UpdateMetadataRequestBody, deleteSharedList, getSharedList, updateSharedListMetadata } from "@/app/api/services/sharedListRepository";
 import { NextRequest, NextResponse } from "next/server";
-import { userHasRole } from "../../services/userRoleService";
+import { requestHasRole } from "../../services/roleService";
 
 export async function GET(req: NextRequest, params: {params: {id: string}}) {
-    if(!await userHasRole(req, "editor")){
+    if(!await requestHasRole(req, "viewer")){
         return NextResponse.json({message: 'unauthorized'}, {status: 403})
     }
     
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, params: {params: {id: string}}) {
 }
 
 export async function PATCH(req: NextRequest, params: {params: {id: string}}) {
-    if(!await userHasRole(req, "owner")){
+    if(!await requestHasRole(req, "owner")){
         return NextResponse.json({message: 'unauthorized'}, {status: 403})
     }
 
@@ -26,7 +26,7 @@ export async function PATCH(req: NextRequest, params: {params: {id: string}}) {
 }
 
 export async function DELETE(req: NextRequest, params: {params: {id: string}}) {
-    if(!await userHasRole(req, "owner")){
+    if(!await requestHasRole(req, "owner")){
         return NextResponse.json({message: 'unauthorized'}, {status: 403})
     }
 
