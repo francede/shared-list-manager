@@ -163,18 +163,30 @@ export default function ListsContent(props: Props){
     }
 
     const toggleWakeLock = async () => {
-        if(wakeLocked){
-            wakeLockSentinelRef.current?.release().catch(e => console.error(e))
-            wakeLockSentinelRef.current = null
-            setWakeLocked(false)
-        }else{
+        const lock = () => {
             setWakeLocked(true)
-            await navigator.wakeLock.request().then((wls) => {
+            navigator.wakeLock.request().then((wls) => {
                 wakeLockSentinelRef.current = wls
+                addEventListener("visibilitychange", () => {
+                    if(document.hidden){
+                        setWakeLocked(false)
+                    }
+                })
             }).catch(e => {
                 console.error(e)
                 setWakeLocked(false)
             })
+        }
+        const unlock = () => {
+            wakeLockSentinelRef.current?.release().catch(e => console.error(e))
+            wakeLockSentinelRef.current = null
+            setWakeLocked(false)
+        }
+
+        if(wakeLocked){
+            unlock()
+        }else{
+            lock()
         }
     }
 
