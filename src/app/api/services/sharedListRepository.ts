@@ -8,6 +8,7 @@ import { DeleteItemRequestBody } from "../list/[id]/delete/route";
 import { ClearCheckedRequestBody } from "../list/[id]/clear/route";
 import { EditItemRequestBody } from "../list/[id]/edit/route";
 import { MoveItemRequestBody } from "../list/[id]/move/route"
+import { UpdateMetadataRequestBody } from "../list/[id]/route";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,13 @@ const SharedListSchema = new mongoose.Schema<SharedList>({
     owner: String,
     viewers: [String],
     items: [SharedListItemSchema],
-    
+    categories: [{
+        id: Number,
+        position: Number,
+        description: String,
+        icon: String,
+        examples: [String]
+    }]
 })
 
 const sharedListModel: mongoose.Model<SharedList> = (mongoose.models["SharedList"] as any || mongoose.model<SharedList>("SharedList", SharedListSchema , "SharedList")) as mongoose.Model<SharedList>;
@@ -62,6 +69,7 @@ export async function createSharedList(name: string, owner: string, viewers: str
         owner: owner,
         viewers: viewers,
         items: [],
+        categories: [],
         version: 1
     }
     await connect();
@@ -84,6 +92,10 @@ export async function updateSharedListMetadata(listId: string, body: UpdateMetad
 
     if(body.viewers){
         updates["viewers"] = body.viewers
+    }
+
+    if(body.categories){
+        updates["categories"] = body.categories
     }
 
 
@@ -344,6 +356,7 @@ export type SharedList = {
     owner: string
     viewers: string[]
     items: SharedListItem[]
+    categories: SharedListItemCategory[]
 };
 
 export type SharedListItem = {
@@ -352,6 +365,14 @@ export type SharedListItem = {
     checked: boolean
     position: number
     opId?: string
+}
+
+export type SharedListItemCategory = {
+    id: number
+    position: number
+    description: string,
+    icon: string,
+    examples: string[]
 }
 
 export type SLEvent = {
@@ -392,9 +413,3 @@ export type MoveItemEvent = {
 
 export type ClearCheckedEvent = {
 } & SLEvent
-
-export type UpdateMetadataRequestBody = {
-    name?: string,
-    owner?: string,
-    viewers?: string[]
-}

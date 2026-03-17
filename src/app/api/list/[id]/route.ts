@@ -1,4 +1,4 @@
-import { UpdateMetadataRequestBody, deleteSharedList, getSharedList, updateSharedListMetadata } from "@/app/api/services/sharedListRepository";
+import { SharedListItemCategory, deleteSharedList, getSharedList, updateSharedListMetadata } from "@/app/api/services/sharedListRepository";
 import { NextRequest, NextResponse } from "next/server";
 import { userHasRole } from "../../services/userRoleService";
 
@@ -37,4 +37,10 @@ export async function DELETE(req: NextRequest, params: {params: {id: string}}) {
     });
 
     return response;
+}
+export type UpdateMetadataRequestBody = {
+    name?: string,
+    owner?: string,
+    viewers?: string[],
+    categories?: SharedListItemCategory[]
 }
