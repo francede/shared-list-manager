@@ -27,7 +27,7 @@ export default function Toggle(props: ToggleProps){
 
 export type ToggleProps = {
     toggled: boolean
-    onToggle: () => void
+    onToggle: () => void //TODO: Change to onOn and onOff
     iconOn: string
     iconOff: string
 }

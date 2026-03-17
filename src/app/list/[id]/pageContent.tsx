@@ -47,6 +47,9 @@ export default function ListsContent(props: Props){
     const {settings, updateTheme} = useUserSettings();
     const pageRef = useRef<HTMLDivElement | null>(null);
 
+    const [wakeLocked, setWakeLocked] = useState<boolean>(false);
+    const wakeLockSentinelRef = useRef<WakeLockSentinel | null>(null);
+
     const saveMetaData = () => {
         const body: UpdateMetadataRequestBody = {};
         if(listNameInput) {
@@ -159,9 +162,29 @@ export default function ListsContent(props: Props){
         return buttons;
     }
 
+    const toggleWakeLock = async () => {
+        if(wakeLocked){
+            wakeLockSentinelRef.current?.release().catch(e => console.error(e))
+            wakeLockSentinelRef.current = null
+            setWakeLocked(false)
+        }else{
+            setWakeLocked(true)
+            await navigator.wakeLock.request().then((wls) => {
+                wakeLockSentinelRef.current = wls
+            }).catch(e => {
+                console.error(e)
+                setWakeLocked(false)
+            })
+        }
+    }
+
+    const wakeLockSupported = () => {
+        return "wakeLock" in navigator
+    }
+
     return (
         <div className={styles['list-page']} ref={pageRef}>
-            {editListMetadataDialogOpen ? 
+            {editListMetadataDialogOpen && 
             <Dialog title={t("edit-list")} close={() => {closeEditListDialog()}}>
                 <div className={styles['dialog-container']}>
                         <div className={styles['input-container']}>
@@ -195,7 +218,7 @@ export default function ListsContent(props: Props){
                         </div>
                         }
                     </div>
-            </Dialog> : ''}
+            </Dialog>}
             
             <div className={styles['header']}>
                 <div className={styles['header-section']}>
@@ -205,6 +228,12 @@ export default function ListsContent(props: Props){
                         onToggle={() => {updateTheme(settings.theme.name === "Light" ? "dark" : "light")}}
                         iconOff='dark_mode'
                         iconOn='light_mode'></Toggle>
+                    {wakeLockSupported() &&
+                        <Toggle 
+                            toggled={wakeLocked}
+                            onToggle={toggleWakeLock}
+                            iconOff='visibility_off'
+                            iconOn='visibility_lock'></Toggle>}
                 </div>
                 
                 <div className={styles['header-section']}>
