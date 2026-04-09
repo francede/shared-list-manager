@@ -19,6 +19,7 @@
     padding: 12px;
     position: relative;
     background-color: var(--primary-bg);
+    box-sizing: border-box;
 }
 
 @media only screen and (min-width: 554px){

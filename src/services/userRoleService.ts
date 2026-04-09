@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getSharedList } from "@/app/api/services/sharedListRepository";
+import { getSharedList } from "@/services/sharedListRepository";
 
 export async function userHasRole(request: NextRequest, requiredRole: Role){
     const roles = await getUserRoles(request)

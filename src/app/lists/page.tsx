@@ -6,7 +6,7 @@ import Spinner from '@/components/spinner';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import Dialog from '@/components/dialog';
 import utils from '@/utils/validationUtils';
-import { SharedList } from '../api/services/sharedListRepository';
+import { SharedList } from '../../services/sharedListRepository';
 import { LinkListView } from '@/components/listView/listView';
 import ButtonMenu from '@/components/buttonMenu';
 import { useUserSettings } from '@/components/hooks/useUserSettings';

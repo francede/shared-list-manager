@@ -2,12 +2,13 @@ import { ObjectId } from "mongodb";
 import mongoose from "mongoose";
 import * as Ably from "ably";
 import sharedListUtils from "@/utils/sharedListUtils";
-import { AddItemRequestBody } from "../list/[id]/add/route";
-import { CheckItemRequestBody } from "../list/[id]/check/route";
-import { DeleteItemRequestBody } from "../list/[id]/delete/route";
-import { ClearCheckedRequestBody } from "../list/[id]/clear/route";
-import { EditItemRequestBody } from "../list/[id]/edit/route";
-import { MoveItemRequestBody } from "../list/[id]/move/route"
+import { AddItemRequestBody } from "../app/api/list/[id]/add/route";
+import { CheckItemRequestBody } from "../app/api/list/[id]/check/route";
+import { DeleteItemRequestBody } from "../app/api/list/[id]/delete/route";
+import { ClearCheckedRequestBody } from "../app/api/list/[id]/clear/route";
+import { EditItemRequestBody } from "../app/api/list/[id]/edit/route";
+import { MoveItemRequestBody } from "../app/api/list/[id]/move/route"
+import { userAgent } from "next/server";
 
 export const runtime = "nodejs";
 
@@ -344,6 +345,9 @@ export type SharedList = {
     owner: string
     viewers: string[]
     items: SharedListItem[]
+    subscriptions: {
+        [user: string]: PushSubscription
+    }
 };
 
 export type SharedListItem = {
@@ -393,8 +397,3 @@ export type MoveItemEvent = {
 export type ClearCheckedEvent = {
 } & SLEvent
 
-export type UpdateMetadataRequestBody = {
-    name?: string,
-    owner?: string,
-    viewers?: string[]
-}

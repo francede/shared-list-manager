@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSharedListsByOwner, getSharedListsByViewer } from "../services/sharedListRepository";
+import { getSharedListsByOwner, getSharedListsByViewer } from "../../../services/sharedListRepository";
 
 export async function GET(req: NextRequest) {
     const email = req.headers.get("x-user-email");

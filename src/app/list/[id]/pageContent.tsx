@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation'
 import utils from '@/utils/validationUtils'
 import { useSession } from 'next-auth/react'
 import { useSharedList } from '@/components/hooks/useSharedList'
-import { UpdateMetadataRequestBody } from '@/app/api/services/sharedListRepository';
+import { UpdateMetadataRequestBody } from '@/services/sharedListRepository';
 import ListView, { ListViewItem } from '@/components/listView/listView';
 import { useTranslation } from '@/components/hooks/useTranslation';
 import AvatarPresence from '@/components/avatarPresence';
@@ -249,7 +249,10 @@ export default function ListsContent(props: Props){
                 </div>
                 
                 <div className={styles['header-section']}>
-                    <AvatarPresence avatars={presence}></AvatarPresence>
+                    <AvatarPresence avatars={presence.concat({user: "test", avatar: {color: "#f00", initial: "a"}})}></AvatarPresence>
+                     <button 
+                        className="material-symbols-outlined fill-0" 
+                        onClick={() => setSettingsOpen(true)}>notifications</button>
                     <button 
                         className="material-symbols-outlined" 
                         onClick={() => setSettingsOpen(true)}>settings</button>

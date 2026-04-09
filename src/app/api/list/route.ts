@@ -1,6 +1,6 @@
-import { createSharedList } from "@/app/api/services/sharedListRepository";
+import { createSharedList } from "@/services/sharedListRepository";
 import { NextRequest, NextResponse } from "next/server";
-import { userHasRole } from "../services/userRoleService";
+import { userHasRole } from "../../../services/userRoleService";
 
 export async function POST(req: NextRequest) {
     if(!await userHasRole(req, "authenticated")){

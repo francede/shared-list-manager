@@ -17,6 +17,10 @@
     white-space: nowrap;
 }
 
+.material-symbols-outlined.fill-0 {
+    font-variation-settings: "FILL" 0;
+}
+
 @font-face {
     font-family: "Poltawski";
     font-style: normal;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
-import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, SLEvent, UncheckItemEvent, UpdateMetadataRequestBody } from "@/app/api/services/sharedListRepository";
+import { AddItemEvent, CheckItemEvent, ClearCheckedEvent, DeleteItemEvent, EditItemEvent, MoveItemEvent, SharedList, SharedListItem, SLEvent, UncheckItemEvent, UpdateMetadataRequestBody } from "@/services/sharedListRepository";
 import { useAbly, useChannel, usePresenceListener } from "ably/react";
 import { Message } from "ably";
 import { AddItemRequestBody } from "@/app/api/list/[id]/add/route";

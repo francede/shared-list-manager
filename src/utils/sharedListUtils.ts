@@ -1,4 +1,4 @@
-import { SharedListItem } from "@/app/api/services/sharedListRepository";
+import { SharedListItem } from "@/services/sharedListRepository";
 
 const sharedListUtils = {
     calculatePosition: (itemBefore?: SharedListItem, itemAfter?: SharedListItem): number => {

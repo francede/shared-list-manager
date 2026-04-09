@@ -1,6 +1,6 @@
-import { UpdateMetadataRequestBody, deleteSharedList, getSharedList, updateSharedListMetadata } from "@/app/api/services/sharedListRepository";
+import { deleteSharedList, getSharedList, updateSharedListMetadata } from "@/services/sharedListRepository";
 import { NextRequest, NextResponse } from "next/server";
-import { userHasRole } from "../../services/userRoleService";
+import { userHasRole } from "../../../../services/userRoleService";
 
 export async function GET(req: NextRequest, params: {params: {id: string}}) {
     if(!await userHasRole(req, "editor")){
@@ -37,4 +37,10 @@ export async function DELETE(req: NextRequest, params: {params: {id: string}}) {
     });
 
     return response;
+}
+
+export type UpdateMetadataRequestBody = {
+    name?: string,
+    owner?: string,
+    viewers?: string[]
 }

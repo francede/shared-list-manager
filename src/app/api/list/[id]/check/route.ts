@@ -1,5 +1,5 @@
-import { updateSharedListCheckItem } from "@/app/api/services/sharedListRepository";
-import { userHasRole } from "@/app/api/services/userRoleService";
+import { updateSharedListCheckItem } from "@/services/sharedListRepository";
+import { userHasRole } from "@/services/userRoleService";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest, params: {params: {id: string}}) {
